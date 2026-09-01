@@ -44,7 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200">
         <div className="h-16 flex items-center justify-center border-b border-slate-200 bg-primary">
-          <h1 className="text-white font-bold italic text-lg">GESTÃO DE VALIDADES</h1>
+          <h1 className="text-white font-bold italic text-lg">VALIDADE DE PRODUTOS</h1>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">

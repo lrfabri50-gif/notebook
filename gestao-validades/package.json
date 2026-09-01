@@ -10,14 +10,14 @@
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
-    "@prisma/client": "^7.10.0",
+    "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
     "clsx": "^2.1.1",
     "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.39.0",
     "next": "16.3.4",
-    "prisma": "^8.0.0-rc.12",
+    "prisma": "^6.19.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",

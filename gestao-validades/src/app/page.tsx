@@ -21,14 +21,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex bg-background md:bg-white flex-col md:flex-row">
       {/* Mobile Header / Desktop Logo */}
       <div className="md:hidden flex flex-col items-center justify-center p-8 bg-primary">
-        <h1 className="text-white font-bold italic text-2xl">GESTÃO DE VALIDADES</h1>
+        <h1 className="text-white font-bold italic text-2xl">VALIDADE DE PRODUTOS</h1>
       </div>
 
       {/* Desktop Illustration Side */}
       <div className="hidden md:flex flex-1 bg-primary items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1586528116311-ad8ed7c663be?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center"></div>
         <div className="z-10 text-center p-8 text-white max-w-lg">
-          <h1 className="text-4xl font-bold italic mb-4">GESTÃO DE VALIDADES</h1>
+          <h1 className="text-4xl font-bold italic mb-4">VALIDADE DE PRODUTOS</h1>
           <p className="text-lg opacity-90">Controle, monitore e evite perdas no seu estoque com alertas automáticos e relatórios detalhados.</p>
         </div>
       </div>
@@ -46,7 +46,6 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
               <input 
                 type="email" 
-                required
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 placeholder="seu@email.com"
                 value={email}
@@ -59,7 +58,6 @@ export default function LoginPage() {
               <div className="relative">
                 <input 
                   type={showPassword ? 'text' : 'password'} 
-                  required
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   placeholder="••••••••"
                   value={password}

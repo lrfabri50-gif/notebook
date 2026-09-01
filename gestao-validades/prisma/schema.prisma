@@ -3,20 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Subscription {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String    @db.Uuid
-  basePlanPrice      Decimal   @default(19.99) @db.Decimal(10,2)
+  id                 String    @id @default(uuid())
+  userId             String    
+  basePlanPrice      Float     @default(19.99) 
   whatsappAddon      Boolean   @default(false)
-  whatsappAddonPrice Decimal   @default(4.99) @db.Decimal(10,2)
-  status             String    @default("trial") @db.VarChar(20)
-  trialStartDate     DateTime? @default(now()) @db.Timestamp(6)
-  trialEndDate       DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + '14 days'::interval)")) @db.Timestamp(6)
-  createdAt          DateTime? @default(now()) @db.Timestamp(6)
+  whatsappAddonPrice Float     @default(4.99) 
+  status             String    @default("trial") 
+  trialStartDate     DateTime? @default(now()) 
+  trialEndDate       DateTime? 
+  createdAt          DateTime? @default(now()) 
   stores             Store[]
   payments           Payment[]
 
@@ -24,11 +24,11 @@ model Subscription {
 }
 
 model Store {
-  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  subscriptionId String?       @db.Uuid
+  id             String        @id @default(uuid())
+  subscriptionId String?       
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  name           String        @db.VarChar(150)
-  createdAt      DateTime?     @default(now()) @db.Timestamp(6)
+  name           String        
+  createdAt      DateTime?     @default(now()) 
   users          User[]
   departments    Department[]
   products       Product[]
@@ -39,40 +39,40 @@ model Store {
 }
 
 model User {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  storeId      String?      @db.Uuid
+  id           String       @id @default(uuid())
+  storeId      String?      
   store        Store?       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  email        String       @unique @db.VarChar(255)
-  passwordHash String       @db.VarChar(255)
-  name         String?      @db.VarChar(150)
-  phoneWhatsapp String?     @db.VarChar(20)
-  role         String       @default("operator") @db.VarChar(50)
-  createdAt    DateTime?    @default(now()) @db.Timestamp(6)
+  email        String       @unique 
+  passwordHash String       
+  name         String?      
+  phoneWhatsapp String?     
+  role         String       @default("operator") 
+  createdAt    DateTime?    @default(now()) 
   collections  Collection[]
 
   @@map("users")
 }
 
 model Department {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  storeId   String?   @db.Uuid
+  id        String    @id @default(uuid())
+  storeId   String?   
   store     Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  name      String    @db.VarChar(100)
-  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  name      String    
+  createdAt DateTime? @default(now()) 
   products  Product[]
 
   @@map("departments")
 }
 
 model Product {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  storeId      String?      @db.Uuid
+  id           String       @id @default(uuid())
+  storeId      String?      
   store        Store?       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  departmentId String?      @db.Uuid
+  departmentId String?      
   department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  barcode      String       @db.VarChar(60)
-  description  String       @db.VarChar(255)
-  createdAt    DateTime?    @default(now()) @db.Timestamp(6)
+  barcode      String       
+  description  String       
+  createdAt    DateTime?    @default(now()) 
   collections  Collection[]
 
   @@unique([storeId, barcode])
@@ -80,48 +80,48 @@ model Product {
 }
 
 model Collection {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  storeId        String?   @db.Uuid
+  id             String    @id @default(uuid())
+  storeId        String?   
   store          Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  productId      String?   @db.Uuid
+  productId      String?   
   product        Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userId         String?   @db.Uuid
+  userId         String?   
   user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  expirationDate DateTime  @db.Date
+  expirationDate DateTime  
   quantity       Int       @default(1)
-  batch          String?   @db.VarChar(100)
-  shelfLocation  String?   @db.VarChar(100)
-  status         String    @default("pending") @db.VarChar(30)
-  collectedAt    DateTime? @default(now()) @db.Timestamp(6)
-  auditedAt      DateTime? @db.Timestamp(6)
+  batch          String?   
+  shelfLocation  String?   
+  status         String    @default("pending") 
+  collectedAt    DateTime? @default(now()) 
+  auditedAt      DateTime? 
 
   @@map("collections")
 }
 
 model Payment {
-  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  subscriptionId String?       @db.Uuid
+  id             String        @id @default(uuid())
+  subscriptionId String?       
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  amount         Decimal       @db.Decimal(10,2)
-  paymentMethod  String        @db.VarChar(30)
-  status         String        @default("pending") @db.VarChar(30)
-  pixQrCode      String?       @db.Text
-  pixCode        String?       @db.Text
-  transactionId  String?       @db.VarChar(255)
-  paidAt         DateTime?     @db.Timestamp(6)
-  createdAt      DateTime?     @default(now()) @db.Timestamp(6)
+  amount         Float       
+  paymentMethod  String        
+  status         String        @default("pending") 
+  pixQrCode      String?       
+  pixCode        String?       
+  transactionId  String?       
+  paidAt         DateTime?     
+  createdAt      DateTime?     @default(now()) 
 
   @@map("payments")
 }
 
 model WhatsappLog {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  storeId        String?   @db.Uuid
+  id             String    @id @default(uuid())
+  storeId        String?   
   store          Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  recipientPhone String    @db.VarChar(20)
-  messageContent String    @db.Text
-  status         String    @default("sent") @db.VarChar(20)
-  sentAt         DateTime? @default(now()) @db.Timestamp(6)
+  recipientPhone String    
+  messageContent String    
+  status         String    @default("sent") 
+  sentAt         DateTime? @default(now()) 
 
   @@map("whatsapp_logs")
 }
