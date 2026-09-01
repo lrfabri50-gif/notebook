@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subscription {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @db.Uuid
+  basePlanPrice      Decimal   @default(19.99) @db.Decimal(10,2)
+  whatsappAddon      Boolean   @default(false)
+  whatsappAddonPrice Decimal   @default(4.99) @db.Decimal(10,2)
+  status             String    @default("trial") @db.VarChar(20)
+  trialStartDate     DateTime? @default(now()) @db.Timestamp(6)
+  trialEndDate       DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + '14 days'::interval)")) @db.Timestamp(6)
+  createdAt          DateTime? @default(now()) @db.Timestamp(6)
+  stores             Store[]
+  payments           Payment[]
+
+  @@map("subscriptions")
+}
+
+model Store {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subscriptionId String?       @db.Uuid
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  name           String        @db.VarChar(150)
+  createdAt      DateTime?     @default(now()) @db.Timestamp(6)
+  users          User[]
+  departments    Department[]
+  products       Product[]
+  collections    Collection[]
+  whatsappLogs   WhatsappLog[]
+
+  @@map("stores")
+}
+
+model User {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId      String?      @db.Uuid
+  store        Store?       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  email        String       @unique @db.VarChar(255)
+  passwordHash String       @db.VarChar(255)
+  name         String?      @db.VarChar(150)
+  phoneWhatsapp String?     @db.VarChar(20)
+  role         String       @default("operator") @db.VarChar(50)
+  createdAt    DateTime?    @default(now()) @db.Timestamp(6)
+  collections  Collection[]
+
+  @@map("users")
+}
+
+model Department {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId   String?   @db.Uuid
+  store     Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String    @db.VarChar(100)
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  products  Product[]
+
+  @@map("departments")
+}
+
+model Product {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId      String?      @db.Uuid
+  store        Store?       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  departmentId String?      @db.Uuid
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  barcode      String       @db.VarChar(60)
+  description  String       @db.VarChar(255)
+  createdAt    DateTime?    @default(now()) @db.Timestamp(6)
+  collections  Collection[]
+
+  @@unique([storeId, barcode])
+  @@map("products")
+}
+
+model Collection {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId        String?   @db.Uuid
+  store          Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  productId      String?   @db.Uuid
+  product        Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId         String?   @db.Uuid
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  expirationDate DateTime  @db.Date
+  quantity       Int       @default(1)
+  batch          String?   @db.VarChar(100)
+  shelfLocation  String?   @db.VarChar(100)
+  status         String    @default("pending") @db.VarChar(30)
+  collectedAt    DateTime? @default(now()) @db.Timestamp(6)
+  auditedAt      DateTime? @db.Timestamp(6)
+
+  @@map("collections")
+}
+
+model Payment {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subscriptionId String?       @db.Uuid
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount         Decimal       @db.Decimal(10,2)
+  paymentMethod  String        @db.VarChar(30)
+  status         String        @default("pending") @db.VarChar(30)
+  pixQrCode      String?       @db.Text
+  pixCode        String?       @db.Text
+  transactionId  String?       @db.VarChar(255)
+  paidAt         DateTime?     @db.Timestamp(6)
+  createdAt      DateTime?     @default(now()) @db.Timestamp(6)
+
+  @@map("payments")
+}
+
+model WhatsappLog {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId        String?   @db.Uuid
+  store          Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  recipientPhone String    @db.VarChar(20)
+  messageContent String    @db.Text
+  status         String    @default("sent") @db.VarChar(20)
+  sentAt         DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map("whatsapp_logs")
+}
