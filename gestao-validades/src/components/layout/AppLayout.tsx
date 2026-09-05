@@ -20,10 +20,10 @@ import clsx from 'clsx';
 
 const menuItems = [
   { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
-  { href: '/produtos', label: 'Cadastro de Produtos', icon: Box, roles: ['admin', 'manager'] },
-  { href: '/departamentos', label: 'Cadastro Departamento', icon: Layers, roles: ['admin', 'manager'] },
+  { href: '/produtos', label: 'Produtos', icon: Box, roles: ['admin', 'manager'] },
+  { href: '/departamentos', label: 'Departamentos', icon: Layers, roles: ['admin', 'manager'] },
   { href: '/usuarios', label: 'Usuários', icon: Users, roles: ['admin', 'manager'] },
-  { href: '/coletar', label: 'Coleta de Produtos', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
+  { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager'] },
   { href: '/meu-plano', label: 'Meu Plano', icon: CreditCard, roles: ['admin'] },
   { href: '/ajuda', label: 'Ajuda', icon: HelpCircle, roles: ['admin', 'manager', 'operator'] },
@@ -94,7 +94,7 @@ export function AppLayout({
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
+                  'flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap',
                   isActive 
                     ? 'bg-white/20 text-white' 
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
