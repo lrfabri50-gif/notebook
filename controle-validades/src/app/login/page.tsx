@@ -108,9 +108,13 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 flex flex-col items-center gap-3">
-            <Link href="/recuperar-senha" className="text-sm text-orange-500 hover:underline transition-colors">
+            <button 
+              type="button"
+              onClick={() => alert('Para redefinir sua senha, por favor entre em contato com o administrador do sistema ou o suporte da Artos Consultoria.')}
+              className="text-sm text-orange-500 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0"
+            >
               Esqueceu sua senha?
-            </Link>
+            </button>
             <p className="text-sm text-slate-600">
               Não tem uma conta?{' '}
               <Link href="/register" className="text-orange-500 hover:underline font-medium transition-colors">
