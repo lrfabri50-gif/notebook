@@ -4,7 +4,10 @@ import { createProduct, deleteProduct } from './actions';
 import { Trash2, Plus, Search } from 'lucide-react';
 import ImportButton from './ImportButton';
 
-export default async function ProdutosPage() {
+export default async function ProdutosPage(props: { searchParams?: Promise<{ barcode?: string }> }) {
+  const searchParams = await props.searchParams;
+  const initialBarcode = searchParams?.barcode || '';
+
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
     include: { department: true }
@@ -46,6 +49,7 @@ export default async function ProdutosPage() {
                   type="text" 
                   name="barcode" 
                   required
+                  defaultValue={initialBarcode}
                   placeholder="7890000000000"
                   className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm"
                 />

@@ -1,15 +1,36 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { Search, Download, Filter } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function RelatoriosPage() {
+export default async function RelatoriosPage(props: { searchParams?: Promise<{ filter?: string }> }) {
+  const searchParams = await props.searchParams;
+  const filter = searchParams?.filter || 'all';
+
+  const now = new Date();
+  
+  // Create where clause based on filter
+  let whereClause = {};
+  if (filter === 'expired') {
+    whereClause = { expirationDate: { lte: now } };
+  } else if (filter === 'expiring_30') {
+    const next15 = new Date();
+    next15.setDate(now.getDate() + 15);
+    const next30 = new Date();
+    next30.setDate(now.getDate() + 30);
+    whereClause = { expirationDate: { gt: next15, lte: next30 } };
+  } else if (filter === 'expiring_15') {
+    const next15 = new Date();
+    next15.setDate(now.getDate() + 15);
+    whereClause = { expirationDate: { gt: now, lte: next15 } };
+  }
+
   const collections = await prisma.collection.findMany({
+    where: whereClause,
     orderBy: { expirationDate: 'asc' },
     include: { product: { include: { department: true } } }
   });
 
-  const now = new Date();
-  
   // Helper to determine status color
   const getStatusColor = (date: Date) => {
     const diffTime = date.getTime() - now.getTime();
@@ -34,13 +55,29 @@ export default async function RelatoriosPage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex-wrap gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800">Relatório de Validades</h2>
-          <p className="text-sm text-slate-500">Acompanhe todos os itens coletados</p>
+          <p className="text-sm text-slate-500">
+            {filter === 'expired' && 'Mostrando apenas produtos vencidos'}
+            {filter === 'expiring_30' && 'Mostrando produtos à recuperar (16 a 30 dias)'}
+            {filter === 'expiring_15' && 'Mostrando produtos que vencem em 15 dias'}
+            {filter === 'all' && 'Acompanhe todos os itens coletados'}
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-            <Filter className="w-4 h-4" /> Filtros
-          </button>
-          <button className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+        <div className="flex gap-3 items-center">
+          <div className="flex gap-2">
+            <Link href="/relatorios?filter=all" className={`px-3 py-1.5 rounded-lg text-sm font-medium ${filter === 'all' ? 'bg-slate-200 text-slate-800' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+              Todos
+            </Link>
+            <Link href="/relatorios?filter=expiring_30" className={`px-3 py-1.5 rounded-lg text-sm font-medium ${filter === 'expiring_30' ? 'bg-orange-100 text-orange-800' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+              30 Dias
+            </Link>
+            <Link href="/relatorios?filter=expiring_15" className={`px-3 py-1.5 rounded-lg text-sm font-medium ${filter === 'expiring_15' ? 'bg-orange-200 text-orange-900' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+              15 Dias
+            </Link>
+            <Link href="/relatorios?filter=expired" className={`px-3 py-1.5 rounded-lg text-sm font-medium ${filter === 'expired' ? 'bg-red-100 text-red-800' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+              Vencidos
+            </Link>
+          </div>
+          <button className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ml-4">
             <Download className="w-4 h-4" /> Exportar CSV
           </button>
         </div>
@@ -63,7 +100,7 @@ export default async function RelatoriosPage() {
               {collections.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                    Nenhuma coleta registrada para exibir no relatório.
+                    Nenhuma coleta encontrada para este filtro.
                   </td>
                 </tr>
               )}
@@ -86,7 +123,7 @@ export default async function RelatoriosPage() {
                       {col.product?.department?.name || '---'}
                     </td>
                     <td className="px-6 py-4 font-medium text-slate-700">
-                      {col.expirationDate.toLocaleDateString('pt-BR')}
+                      {col.expirationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       {col.batch || '-'}
