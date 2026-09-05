@@ -67,7 +67,7 @@ export function AppLayout({
         {/* Page Title (Dynamic) replacing the Logo */}
         <div className="flex flex-col justify-center shrink-0 min-w-[200px]">
           <h2 className="text-white font-bold text-lg leading-tight truncate">
-            {pathname === '/dashboard' ? 'Dashboard' : 
+            {pathname === '/dashboard' ? 'Painel' : 
              pathname.startsWith('/produtos') ? 'Cadastro de Produtos' :
              pathname.startsWith('/departamentos') ? 'Departamentos' :
              pathname.startsWith('/coletar') ? 'Coleta de Produtos' :
@@ -94,7 +94,7 @@ export function AppLayout({
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  'flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
                   isActive 
                     ? 'bg-white/20 text-white' 
                     : 'text-white/80 hover:bg-white/10 hover:text-white'

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { Search, Download, Filter } from 'lucide-react';
 import Link from 'next/link';
 
+import ExportButtons, { ExportData } from './ExportButtons';
+
 export default async function RelatoriosPage(props: { searchParams?: Promise<{ filter?: string }> }) {
   const searchParams = await props.searchParams;
   const filter = searchParams?.filter || 'all';
@@ -50,6 +52,17 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
     return 'OK';
   };
 
+  // Prepara dados para exportação (PDF e CSV)
+  const exportData: ExportData[] = collections.map(c => ({
+    statusLabel: getStatusLabel(c.expirationDate),
+    productDesc: c.product?.description || '---',
+    barcode: c.product?.barcode || '---',
+    department: c.product?.department?.name || '---',
+    expirationStr: c.expirationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
+    batch: c.batch || '-',
+    quantity: c.quantity
+  }));
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex-wrap gap-4">
@@ -77,9 +90,7 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
               Vencidos
             </Link>
           </div>
-          <button className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ml-4">
-            <Download className="w-4 h-4" /> Exportar CSV
-          </button>
+          <ExportButtons data={exportData} />
         </div>
       </div>
 
