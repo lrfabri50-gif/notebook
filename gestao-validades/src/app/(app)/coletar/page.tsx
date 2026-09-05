@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Camera, Search, Plus, X } from 'lucide-react';
+import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
-import clsx from 'clsx';
+import { createCollection } from './actions';
+import { useRouter } from 'next/navigation';
 
 export default function ColetaPage() {
   const [barcode, setBarcode] = useState('');
@@ -14,6 +15,8 @@ export default function ColetaPage() {
   
   const [isScanning, setIsScanning] = useState(false);
   const [showNotFoundModal, setShowNotFoundModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     let html5QrCode: Html5Qrcode;
@@ -46,18 +49,34 @@ export default function ColetaPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcode) return;
-    if (barcode === '000') {
+    
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('barcode', barcode);
+    formData.append('expirationDate', expiration);
+    formData.append('quantity', quantity);
+    formData.append('batch', batch);
+    formData.append('shelfLocation', location);
+
+    const res = await createCollection(formData);
+    setLoading(false);
+
+    if (res?.error === 'PRODUTO_NAO_ENCONTRADO') {
       setShowNotFoundModal(true);
       return;
     }
-    // Simulate successful save
-    alert(`Coleta salva: ${barcode}`);
-    setBarcode('');
-    setExpiration('');
-    setQuantity('1');
+
+    if (res?.success) {
+      alert(`Coleta salva com sucesso!`);
+      setBarcode('');
+      setExpiration('');
+      setQuantity('1');
+      setBatch('');
+      setLocation('');
+    }
   };
 
   return (
@@ -90,8 +109,8 @@ export default function ColetaPage() {
               <label className="block text-xs font-medium text-slate-500 mb-1">Local (Opc)</label>
               <input type="text" value={location} onChange={(e)=>setLocation(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
             </div>
-            <button type="submit" className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm whitespace-nowrap">
-              Enviar Coleta
+            <button type="submit" disabled={loading} className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm whitespace-nowrap disabled:opacity-50">
+              {loading ? 'Enviando...' : 'Enviar Coleta'}
             </button>
           </form>
         </div>
@@ -146,8 +165,8 @@ export default function ColetaPage() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl transition-colors shadow-md shadow-primary/20 mt-4">
-                Confirmar Coleta
+              <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl transition-colors shadow-md shadow-primary/20 mt-4 disabled:opacity-50">
+                {loading ? 'Processando...' : 'Confirmar Coleta'}
               </button>
             </form>
           )}
@@ -175,7 +194,7 @@ export default function ColetaPage() {
               <button 
                 onClick={() => {
                   setShowNotFoundModal(false);
-                  // router.push('/produtos/novo?barcode=' + barcode);
+                  router.push('/produtos');
                 }}
                 className="flex-1 px-4 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-colors shadow-sm"
               >
