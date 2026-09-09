@@ -206,50 +206,47 @@ export default async function DashboardPage() {
 
       </div>
 
-      {/* MIDDLE ROW: Charts */}
-      <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
-
       {/* BOTTOM ROW: Actionable & Coverage */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         {/* Ação Imediata */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-4 shrink-0">
-            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-              <CalendarClock className="w-5 h-5 text-orange-500" /> Ação Imediata
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col h-[280px]">
+          <div className="flex items-center justify-between mb-3 shrink-0">
+            <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+              <CalendarClock className="w-4 h-4 text-orange-500" /> Ação Imediata
             </h3>
-            <span className="text-xs font-medium bg-orange-100 text-orange-700 px-2 py-1 rounded-md">Próximos 5 vencimentos</span>
+            <span className="text-[10px] font-medium bg-orange-100 text-orange-700 px-2 py-0.5 rounded">Próximos 5 vencimentos</span>
           </div>
           
-          <div className="flex-1 overflow-y-auto min-h-0 pr-2 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto min-h-0 pr-1 custom-scrollbar">
             {imediateActions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
-                <ShieldCheck className="w-12 h-12 text-slate-200" />
-                <p>Nenhum vencimento próximo. Tudo seguro!</p>
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-1">
+                <ShieldCheck className="w-10 h-10 text-slate-200" />
+                <p className="text-sm">Nenhum vencimento próximo. Tudo seguro!</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
                 {imediateActions.map((col: any) => {
                   const daysLeft = Math.ceil((col.expirationDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
                   return (
-                    <div key={col.id} className="py-3 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-lg px-2 -mx-2">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center shrink-0 ${daysLeft <= 15 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                          <span className="text-[10px] uppercase font-bold opacity-70">Dias</span>
-                          <span className="text-lg font-black leading-none">{daysLeft}</span>
+                    <div key={col.id} className="py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-lg px-2 -mx-2">
+                      <div className="flex items-start gap-2.5">
+                        <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center shrink-0 ${daysLeft <= 15 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                          <span className="text-[9px] uppercase font-bold opacity-70">Dias</span>
+                          <span className="text-base font-black leading-none">{daysLeft}</span>
                         </div>
                         <div>
                           <p className="font-bold text-slate-800 text-sm line-clamp-1">{col.product?.description}</p>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
                             <span className="bg-slate-100 px-1.5 py-0.5 rounded">{col.product?.department?.name || 'Sem Depto'}</span>
                             {col.shelfLocation && <span>Local: <strong>{col.shelfLocation}</strong></span>}
                             <span>Lote: <strong>{col.batch || 'N/A'}</strong></span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right shrink-0 ml-4">
-                         <span className="block text-xs text-slate-400 mb-1">Estoque</span>
-                         <span className="font-bold text-slate-700">{col.quantity} un</span>
+                      <div className="text-right shrink-0 ml-2">
+                         <span className="block text-[10px] text-slate-400 mb-0.5">Estoque</span>
+                         <span className="font-bold text-slate-700 text-sm">{col.quantity} un</span>
                       </div>
                     </div>
                   );
@@ -258,22 +255,22 @@ export default async function DashboardPage() {
             )}
           </div>
           {imediateActions.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-100 text-center shrink-0">
-              <Link href="/relatorios" className="text-primary hover:text-primary-hover text-sm font-semibold flex items-center justify-center gap-1">
-                Ver Relatório Completo <ArrowRight className="w-4 h-4" />
+            <div className="mt-2 pt-2 border-t border-slate-100 text-center shrink-0">
+              <Link href="/relatorios" className="text-primary hover:text-primary-hover text-xs font-semibold flex items-center justify-center gap-1">
+                Ver Relatório Completo <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
           )}
         </div>
 
         {/* Cobertura de Prevenção */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center justify-center text-center relative overflow-hidden h-[380px]">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col items-center justify-center text-center relative overflow-hidden h-[280px]">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
           
-          <h3 className="font-bold text-slate-800 mb-2">Cobertura de Validades</h3>
-          <p className="text-sm text-slate-500 mb-6">Produtos rastreados vs Total cadastrado</p>
+          <h3 className="font-bold text-slate-800 text-base mb-1">Cobertura de Validades</h3>
+          <p className="text-xs text-slate-500 mb-4">Produtos rastreados vs Total cadastrado</p>
 
-          <div className="relative w-40 h-40 flex items-center justify-center mb-6">
+          <div className="relative w-28 h-28 flex items-center justify-center mb-4">
             {/* SVG Donut Chart */}
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <path
@@ -294,18 +291,18 @@ export default async function DashboardPage() {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-4xl font-black text-slate-800">{coveragePercent}%</span>
+              <span className="text-2xl font-black text-slate-800">{coveragePercent}%</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 w-full max-w-[250px] border-t border-slate-100 pt-4 mt-auto">
+          <div className="grid grid-cols-2 gap-4 w-full max-w-[200px] border-t border-slate-100 pt-3 mt-auto">
             <div>
-              <p className="text-xs text-slate-400 font-medium">Mapeados</p>
-              <p className="font-bold text-indigo-600 text-xl">{coveredProductsCount}</p>
+              <p className="text-[11px] text-slate-400 font-medium">Mapeados</p>
+              <p className="font-bold text-indigo-600 text-lg leading-tight">{coveredProductsCount}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-medium">Faltando</p>
-              <p className="font-bold text-slate-600 text-xl">{totalProdutos - coveredProductsCount}</p>
+              <p className="text-[11px] text-slate-400 font-medium">Faltando</p>
+              <p className="font-bold text-slate-600 text-lg leading-tight">{totalProdutos - coveredProductsCount}</p>
             </div>
           </div>
         </div>
