@@ -206,6 +206,9 @@ export default async function DashboardPage() {
 
       </div>
 
+      {/* MIDDLE ROW: Charts */}
+      <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
+
       {/* BOTTOM ROW: Actionable & Coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
