@@ -6,13 +6,13 @@ import { getSession } from '@/lib/auth';
 
 export async function createProduct(formData: FormData) {
   const session = await getSession();
-  if (!session?.storeId) return { error: 'Não autorizado' };
+  if (!session?.storeId) throw new Error('Não autorizado');
 
   const barcode = formData.get('barcode') as string;
   const description = formData.get('description') as string;
   const departmentId = formData.get('departmentId') as string;
 
-  if (!barcode || !description) return { error: 'Campos obrigatórios' };
+  if (!barcode || !description) throw new Error('Campos obrigatórios');
 
   try {
     await prisma.product.create({
@@ -26,13 +26,13 @@ export async function createProduct(formData: FormData) {
     revalidatePath('/produtos');
   } catch (err) {
     console.error("Failed to create product", err);
-    return { error: 'Erro ao criar produto' };
+    throw new Error('Erro ao criar produto');
   }
 }
 
 export async function deleteProduct(id: string) {
   const session = await getSession();
-  if (!session?.storeId) return { error: 'Não autorizado' };
+  if (!session?.storeId) throw new Error('Não autorizado');
 
   try {
     // Only delete if the product belongs to the user's store
@@ -43,9 +43,8 @@ export async function deleteProduct(id: string) {
       },
     });
     revalidatePath('/produtos');
-    return { success: true };
   } catch (err) {
     console.error("Failed to delete product", err);
-    return { error: 'Erro ao excluir produto' };
+    throw new Error('Erro ao excluir produto');
   }
 }
