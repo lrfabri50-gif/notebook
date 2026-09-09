@@ -8,48 +8,20 @@ export default function ImportButton() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
     
-    setLoading(true);
-    setMessage('');
+    setIsLoading(true);
 
     try {
-      const text = await file.text();
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      
-      const products = [];
-      let startIdx = 0;
-      
-      // Ignore header row if it exists
-      if (lines[0].toLowerCase().includes('barras') || lines[0].toLowerCase().includes('cód') || lines[0].toLowerCase().includes('codigo')) {
-        startIdx = 1;
-      }
+      const formData = new FormData();
+      formData.append('file', file);
 
-      for (let i = startIdx; i < lines.length; i++) {
-        const separator = lines[i].includes(';') ? ';' : ',';
-        const cols = lines[i].split(separator).map(c => c.trim().replace(/^"|"$/g, ''));
-        
-        if (cols.length >= 3) {
-          products.push({
-            barcode: cols[0],
-            description: cols[1],
-            departmentName: cols[2]
-          });
-        }
-      }
-
-      if (products.length === 0) {
-        throw new Error('Nenhum produto válido encontrado no arquivo. Verifique se o formato é: Código;Descrição;Departamento');
-      }
-
-      const response = await fetch('/api/products/import', {
+      const res = await fetch('/api/products/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: formData,
       });
 

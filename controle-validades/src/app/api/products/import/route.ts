@@ -1,79 +1,131 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session || !session.storeId) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { products } = await req.json();
+    const storeId = session.storeId as string;
 
-    if (!products || !Array.isArray(products) || products.length === 0) {
-      return NextResponse.json({ error: 'Nenhum produto enviado' }, { status: 400 });
+    // Check if it's FormData
+    const contentType = request.headers.get('content-type') || '';
+    if (!contentType.includes('multipart/form-data')) {
+        return NextResponse.json({ error: 'Formato inválido. Envie como multipart/form-data.' }, { status: 400 });
     }
 
-    const storeId = session.storeId;
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
 
-    // 1. Extrair nomes de departamentos únicos
-    const uniqueDeptNames = Array.from(new Set(products.map((p: any) => p.departmentName).filter(Boolean))) as string[];
-
-    // 2. Buscar ou criar departamentos
-    const departmentMap = new Map<string, string>(); // nome -> id
-
-    // Buscar existentes
-    const existingDepts = await prisma.department.findMany({
-      where: { storeId, name: { in: uniqueDeptNames } }
-    });
-
-    existingDepts.forEach(d => departmentMap.set(d.name, d.id));
-
-    // Criar os que faltam
-    for (const deptName of uniqueDeptNames) {
-      if (!departmentMap.has(deptName)) {
-        const newDept = await prisma.department.create({
-          data: { name: deptName, storeId }
-        });
-        departmentMap.set(newDept.name, newDept.id);
-      }
+    if (!file) {
+      return NextResponse.json({ error: 'Nenhum arquivo enviado' }, { status: 400 });
     }
 
-    // 3. Upsert de Produtos
-    let count = 0;
+    // Try to decode as Windows-1252/ISO-8859-1 since Excel CSVs often use it in Brazil
+    const buffer = Buffer.from(await file.arrayBuffer());
+    let text = new TextDecoder('utf-8').decode(buffer);
     
-    // Processamos sequencialmente para evitar locks (sqlite/postgres)
-    for (const p of products) {
-      const deptId = p.departmentName ? departmentMap.get(p.departmentName) : null;
+    // Fallback if there are strange characters like "Descrio"
+    if (text.includes('')) {
+        text = new TextDecoder('iso-8859-1').decode(buffer);
+    }
+
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+    if (lines.length === 0) {
+      return NextResponse.json({ error: 'Arquivo vazio' }, { status: 400 });
+    }
+
+    // Determine separator from the first line
+    const firstLine = lines[0];
+    const separator = firstLine.includes(';') ? ';' : ',';
+
+    // Verify if first line is header
+    let startIdx = 0;
+    const lowerFirstLine = firstLine.toLowerCase();
+    if (lowerFirstLine.includes('barras') || lowerFirstLine.includes('cód') || lowerFirstLine.includes('codigo') || lowerFirstLine.includes('desc')) {
+      startIdx = 1;
+    }
+
+    let successCount = 0;
+    const departmentCache = new Map<string, string>(); // name -> id
+
+    // Load existing departments to cache
+    const existingDepts = await prisma.department.findMany({
+      where: { storeId }
+    });
+    existingDepts.forEach((d: any) => departmentCache.set(d.name.toLowerCase(), d.id));
+
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i];
+      const parts = line.split(separator);
       
-      if (!p.barcode || !p.description) continue;
+      // Pad empty parts if line is like 'SEM GTIN;0;' -> ['SEM GTIN', '0', '']
+      const barcode = (parts[0] || '').trim().replace(/^"|"$/g, '');
+      const description = (parts[1] || '').trim().replace(/^"|"$/g, '');
+      const departmentName = (parts[2] || '').trim().replace(/^"|"$/g, '');
+
+      if (!barcode || !description) continue;
+
+      // Reject scientific notation from Excel (e.g., 7,89E+12)
+      if (barcode.toUpperCase().includes('E+')) {
+         return NextResponse.json({ 
+             error: `O código de barras "${barcode}" na linha ${i+1} está no formato científico do Excel (ex: 7,89E+12). Formate a coluna de códigos como NÚMERO sem decimais no Excel antes de salvar o CSV.` 
+         }, { status: 400 });
+      }
+
+      let departmentId = null;
+
+      if (departmentName) {
+        const deptKey = departmentName.toLowerCase();
+        departmentId = departmentCache.get(deptKey);
+
+        if (!departmentId) {
+          // Create department
+          const newDept = await prisma.department.create({
+            data: {
+              name: departmentName,
+              storeId: storeId,
+            }
+          });
+          departmentId = newDept.id;
+          departmentCache.set(deptKey, departmentId);
+        }
+      }
 
       await prisma.product.upsert({
         where: {
           storeId_barcode: {
-            storeId,
-            barcode: p.barcode
+            storeId: storeId,
+            barcode: barcode
           }
         },
         update: {
-          description: p.description,
-          departmentId: deptId
+          description: description,
+          departmentId: departmentId
         },
         create: {
-          storeId,
-          barcode: p.barcode,
-          description: p.description,
-          departmentId: deptId
+          storeId: storeId,
+          barcode: barcode,
+          description: description,
+          departmentId: departmentId
         }
       });
-      count++;
+      
+      successCount++;
     }
 
-    return NextResponse.json({ success: true, count });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Importação concluída', 
+      count: successCount 
+    });
 
   } catch (error: any) {
-    console.error('Import Error:', error);
-    return NextResponse.json({ error: 'Erro ao processar importação' }, { status: 500 });
+    console.error('Import error:', error);
+    return NextResponse.json({ error: error.message || 'Erro interno ao importar produtos' }, { status: 500 });
   }
 }
