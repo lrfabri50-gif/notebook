@@ -3,8 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { PackageX, ScanLine, AlertTriangle, Tag } from 'lucide-react';
 import DashboardCharts from './DashboardCharts';
 import Link from 'next/link';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {
+  const session = await getSession();
+  if (!session || !session.storeId) {
+    redirect('/login');
+  }
+  const storeId = session.storeId as string;
+
   const now = new Date();
   
   // KPI dates
@@ -26,35 +34,42 @@ export default async function DashboardPage() {
     coletasHoje,
     totalProdutos
   ] = await Promise.all([
-    prisma.collection.count(),
+    prisma.collection.count({ where: { storeId } }),
     prisma.collection.count({
       where: {
+        storeId,
         expirationDate: { gt: next15Days, lte: next30Days },
         status: { not: 'collected' }
       }
     }),
     prisma.collection.count({
       where: {
+        storeId,
         expirationDate: { gt: now, lte: next15Days },
         status: { not: 'collected' }
       }
     }),
     prisma.collection.count({
       where: {
+        storeId,
         expirationDate: { lte: now },
         status: { not: 'collected' }
       }
     }),
     prisma.collection.findMany({
-      where: { collectedAt: { gte: last7Days } },
+      where: { 
+        storeId,
+        collectedAt: { gte: last7Days } 
+      },
       include: { product: { include: { department: true } } }
     }),
     prisma.collection.count({
       where: {
+        storeId,
         collectedAt: { gte: new Date(now.setHours(0, 0, 0, 0)) }
       }
     }),
-    prisma.product.count()
+    prisma.product.count({ where: { storeId } })
   ]);
 
   // Build Evolution Data (Last 7 Days)
@@ -98,7 +113,10 @@ export default async function DashboardPage() {
 
   // Build Depto Data (Top 5 perdas by Depto in DB history)
   const expiredCollections = await prisma.collection.findMany({
-    where: { expirationDate: { lte: now } },
+    where: { 
+      storeId,
+      expirationDate: { lte: now } 
+    },
     include: { product: { include: { department: true } } }
   });
 
