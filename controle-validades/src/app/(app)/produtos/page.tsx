@@ -3,17 +3,28 @@ import { prisma } from '@/lib/prisma';
 import { createProduct, deleteProduct } from './actions';
 import { Trash2, Plus, Search } from 'lucide-react';
 import ImportButton from './ImportButton';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export default async function ProdutosPage(props: { searchParams?: Promise<{ barcode?: string }> }) {
+  const session = await getSession();
+  if (!session || !session.storeId) {
+    redirect('/login');
+  }
+
+  const storeId = session.storeId as string;
+
   const searchParams = await props.searchParams;
   const initialBarcode = searchParams?.barcode || '';
 
   const products = await prisma.product.findMany({
+    where: { storeId },
     orderBy: { createdAt: 'desc' },
     include: { department: true }
   });
 
   const departments = await prisma.department.findMany({
+    where: { storeId },
     orderBy: { name: 'asc' }
   });
 
