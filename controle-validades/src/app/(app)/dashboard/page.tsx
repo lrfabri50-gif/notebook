@@ -210,20 +210,20 @@ export default async function DashboardPage() {
       <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
 
       {/* BOTTOM ROW: Actionable & Coverage */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Ação Imediata */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[380px]">
+          <div className="flex items-center justify-between mb-4 shrink-0">
             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
               <CalendarClock className="w-5 h-5 text-orange-500" /> Ação Imediata
             </h3>
             <span className="text-xs font-medium bg-orange-100 text-orange-700 px-2 py-1 rounded-md">Próximos 5 vencimentos</span>
           </div>
           
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto min-h-0 pr-2 custom-scrollbar">
             {imediateActions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 py-8">
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
                 <ShieldCheck className="w-12 h-12 text-slate-200" />
                 <p>Nenhum vencimento próximo. Tudo seguro!</p>
               </div>
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
             )}
           </div>
           {imediateActions.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+            <div className="mt-4 pt-4 border-t border-slate-100 text-center shrink-0">
               <Link href="/relatorios" className="text-primary hover:text-primary-hover text-sm font-semibold flex items-center justify-center gap-1">
                 Ver Relatório Completo <ArrowRight className="w-4 h-4" />
               </Link>
@@ -267,13 +267,13 @@ export default async function DashboardPage() {
         </div>
 
         {/* Cobertura de Prevenção */}
-        <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center justify-center text-center relative overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center justify-center text-center relative overflow-hidden h-[380px]">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
           
           <h3 className="font-bold text-slate-800 mb-2">Cobertura de Validades</h3>
-          <p className="text-sm text-slate-500 mb-8">Produtos rastreados vs Total cadastrado</p>
+          <p className="text-sm text-slate-500 mb-6">Produtos rastreados vs Total cadastrado</p>
 
-          <div className="relative w-36 h-36 flex items-center justify-center mb-6">
+          <div className="relative w-40 h-40 flex items-center justify-center mb-6">
             {/* SVG Donut Chart */}
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <path
@@ -284,7 +284,7 @@ export default async function DashboardPage() {
                 strokeWidth="4"
               />
               <path
-                className="text-indigo-500 drop-shadow-sm"
+                className="text-indigo-500 drop-shadow-sm transition-all duration-1000 ease-out"
                 strokeDasharray={`${coveragePercent}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
@@ -294,18 +294,18 @@ export default async function DashboardPage() {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-slate-800">{coveragePercent}%</span>
+              <span className="text-4xl font-black text-slate-800">{coveragePercent}%</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 w-full border-t border-slate-100 pt-4">
+          <div className="grid grid-cols-2 gap-4 w-full max-w-[250px] border-t border-slate-100 pt-4 mt-auto">
             <div>
               <p className="text-xs text-slate-400 font-medium">Mapeados</p>
-              <p className="font-bold text-indigo-600 text-lg">{coveredProductsCount}</p>
+              <p className="font-bold text-indigo-600 text-xl">{coveredProductsCount}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-medium">Sem Validade</p>
-              <p className="font-bold text-slate-600 text-lg">{totalProdutos - coveredProductsCount}</p>
+              <p className="text-xs text-slate-400 font-medium">Faltando</p>
+              <p className="font-bold text-slate-600 text-xl">{totalProdutos - coveredProductsCount}</p>
             </div>
           </div>
         </div>

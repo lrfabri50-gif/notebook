@@ -59,17 +59,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function DashboardCharts({ evolutionData, deptoData }: DashboardChartsProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Evolution Chart */}
-      <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[380px]">
+        <div className="flex items-center justify-between mb-6 shrink-0">
           <h3 className="font-bold text-slate-800 text-lg">Evolução Diária (Últimos 7 dias)</h3>
           <select className="text-sm border-slate-200 rounded-lg text-slate-600 focus:ring-primary bg-slate-50">
             <option>Esta Semana</option>
             <option>Este Mês</option>
           </select>
         </div>
-        <div className="flex-1 min-h-[250px] w-full">
+        <div className="flex-1 w-full min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={evolutionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
@@ -98,9 +98,9 @@ export default function DashboardCharts({ evolutionData, deptoData }: DashboardC
       </div>
 
       {/* Bar Chart */}
-      <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col">
-        <h3 className="font-bold text-slate-800 text-lg mb-6">Top Perdas por Departamento</h3>
-        <div className="flex-1 min-h-[250px] w-full">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[380px]">
+        <h3 className="font-bold text-slate-800 text-lg mb-6 shrink-0">Top Perdas por Departamento</h3>
+        <div className="flex-1 w-full min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deptoData} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
               <XAxis type="number" hide />
