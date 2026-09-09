@@ -59,26 +59,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function DashboardCharts({ evolutionData, deptoData }: DashboardChartsProps) {
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Evolution Chart */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-slate-800">Evolução Diária (Últimos 7 dias)</h3>
-          <select className="text-sm border-slate-200 rounded-lg text-slate-600 focus:ring-primary">
+      <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-slate-800 text-lg">Evolução Diária (Últimos 7 dias)</h3>
+          <select className="text-sm border-slate-200 rounded-lg text-slate-600 focus:ring-primary bg-slate-50">
             <option>Esta Semana</option>
             <option>Este Mês</option>
           </select>
         </div>
-        <div className="h-[220px] w-full">
+        <div className="flex-1 min-h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={evolutionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorInsercoes" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#128C7E" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#128C7E" stopOpacity={0.15}/>
                   <stop offset="95%" stopColor="#128C7E" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorPerdas" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15}/>
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                 </linearGradient>
               </defs>
@@ -90,23 +90,23 @@ export default function DashboardCharts({ evolutionData, deptoData }: DashboardC
                 cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }}
               />
               <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }}/>
-              <Area type="monotone" dataKey="Insercoes" stroke="#128C7E" strokeWidth={2} fillOpacity={1} fill="url(#colorInsercoes)" />
-              <Area type="monotone" dataKey="Perdas" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorPerdas)" />
+              <Area type="monotone" dataKey="Insercoes" stroke="#128C7E" strokeWidth={3} fillOpacity={1} fill="url(#colorInsercoes)" />
+              <Area type="monotone" dataKey="Perdas" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorPerdas)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Bar Chart */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
-        <h3 className="font-bold text-slate-800 mb-4">Top Perdas por Departamento (30 dias)</h3>
-        <div className="h-[200px] w-full">
+      <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col">
+        <h3 className="font-bold text-slate-800 text-lg mb-6">Top Perdas por Departamento</h3>
+        <div className="flex-1 min-h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deptoData} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
               <XAxis type="number" hide />
               <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-              <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}/>
-              <Bar dataKey="perdas" fill="#E65100" radius={[0, 4, 4, 0]} barSize={24} />
+              <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}/>
+              <Bar dataKey="perdas" fill="#f97316" radius={[0, 6, 6, 0]} barSize={28} />
             </BarChart>
           </ResponsiveContainer>
         </div>
