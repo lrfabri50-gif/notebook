@@ -11,6 +11,11 @@ export default async function DashboardPage() {
   if (!session || !session.storeId) {
     redirect('/login');
   }
+
+  if (session.role === 'operator') {
+    redirect('/coletar');
+  }
+
   const storeId = session.storeId as string;
 
   const now = new Date();

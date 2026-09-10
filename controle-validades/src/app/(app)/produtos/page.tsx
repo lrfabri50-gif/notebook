@@ -6,7 +6,7 @@ import ImportButton from './ImportButton';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
-export default async function ProdutosPage(props: { searchParams?: Promise<{ barcode?: string }> }) {
+export default async function ProdutosPage(props: { searchParams?: Promise<{ barcode?: string, search?: string }> }) {
   const session = await getSession();
   if (!session || !session.storeId) {
     redirect('/login');
@@ -16,9 +16,18 @@ export default async function ProdutosPage(props: { searchParams?: Promise<{ bar
 
   const searchParams = await props.searchParams;
   const initialBarcode = searchParams?.barcode || '';
+  const searchTerm = searchParams?.search || '';
+
+  const whereClause: any = { storeId };
+  if (searchTerm) {
+    whereClause.OR = [
+      { description: { contains: searchTerm, mode: 'insensitive' } },
+      { barcode: { contains: searchTerm } }
+    ];
+  }
 
   const products = await prisma.product.findMany({
-    where: { storeId },
+    where: whereClause,
     orderBy: { createdAt: 'desc' },
     include: { department: true }
   });
@@ -36,14 +45,18 @@ export default async function ProdutosPage(props: { searchParams?: Promise<{ bar
           <p className="text-sm text-slate-500">Gerencie o cadastro de produtos no sistema</p>
         </div>
         <div className="flex gap-3">
-          <div className="relative">
+          <form method="GET" className="relative">
             <input 
               type="text" 
-              placeholder="Buscar..."
+              name="search"
+              defaultValue={searchParams?.search || ''}
+              placeholder="Buscar por descrição ou código..."
               className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64"
             />
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          </div>
+            <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2">
+              <Search className="w-4 h-4 text-slate-400" />
+            </button>
+          </form>
           <ImportButton />
         </div>
       </div>

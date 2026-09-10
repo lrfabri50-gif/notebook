@@ -20,7 +20,7 @@ import {
 import clsx from 'clsx';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
+  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager'] },
   { href: '/produtos', label: 'Produtos', icon: Box, roles: ['admin', 'manager', 'operator'] },
   { href: '/departamentos', label: 'Departamentos', icon: Layers, roles: ['admin', 'manager', 'operator'] },
   { href: '/usuarios', label: 'Usuários', icon: Users, roles: ['admin', 'manager'] },
