@@ -36,7 +36,6 @@ export default function ColetaPage() {
           setShowNotFoundModal(false);
         } else {
           setProductInfo(null);
-          setShowNotFoundModal(true);
         }
       } catch (err) {
         console.error("Error looking up product", err);
@@ -147,6 +146,18 @@ export default function ColetaPage() {
                   {productInfo.department && <span className="ml-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px]">{productInfo.department}</span>}
                 </div>
               )}
+              {!isSearchingProduct && !productInfo && barcode.length >= 3 && (
+                <div className="absolute top-[110%] left-0 text-xs flex items-center gap-2">
+                  <span className="text-red-500 font-medium">Produto não encontrado.</span>
+                  <button 
+                    type="button" 
+                    onClick={() => router.push(`/produtos?barcode=${barcode}`)}
+                    className="text-primary hover:underline font-bold"
+                  >
+                    Cadastrar
+                  </button>
+                </div>
+              )}
             </div>
             <div className="w-32">
               <label className="block text-xs font-medium text-slate-500 mb-1">Vencimento</label>
@@ -220,7 +231,16 @@ export default function ColetaPage() {
                       {productInfo.department && <span className="text-xs text-slate-500 mt-0.5">{productInfo.department}</span>}
                     </>
                   ) : (
-                    <span className="text-sm font-medium text-red-500">Produto não encontrado</span>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm font-medium text-red-500">Produto não encontrado</span>
+                      <button 
+                        type="button" 
+                        onClick={() => router.push(`/produtos?barcode=${barcode}`)}
+                        className="text-xs bg-primary/10 text-primary hover:bg-primary/20 font-bold px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Cadastrar agora
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
