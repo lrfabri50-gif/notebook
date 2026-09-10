@@ -63,7 +63,7 @@ export default function DashboardCharts({ evolutionData, deptoData }: DashboardC
       {/* Evolution Chart */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[320px]">
         <div className="flex items-center justify-between mb-4 shrink-0">
-          <h3 className="font-bold text-slate-800 text-base">Evolução Diária (Últimos 7 dias)</h3>
+          <h3 className="font-bold text-slate-800 text-base">Resumo Diário (Últimos 7 dias)</h3>
           <select className="text-xs border-slate-200 rounded-lg text-slate-600 focus:ring-primary bg-slate-50 py-1 px-2">
             <option>Esta Semana</option>
             <option>Este Mês</option>
@@ -99,12 +99,12 @@ export default function DashboardCharts({ evolutionData, deptoData }: DashboardC
 
       {/* Bar Chart */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[320px]">
-        <h3 className="font-bold text-slate-800 text-base mb-4 shrink-0">Top Perdas por Departamento</h3>
+        <h3 className="font-bold text-slate-800 text-base mb-4 shrink-0">Perdas por Produtos</h3>
         <div className="flex-1 w-full min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deptoData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
               <XAxis type="number" hide />
-              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
+              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} width={120} />
               <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}/>
               <Bar dataKey="perdas" fill="#f97316" radius={[0, 6, 6, 0]} barSize={20} />
             </BarChart>

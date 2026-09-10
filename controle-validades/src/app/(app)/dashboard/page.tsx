@@ -1,6 +1,6 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { PackageX, ScanLine, AlertTriangle, Tag, CalendarClock, ShieldCheck, ArrowRight } from 'lucide-react';
+import { CalendarClock, ShieldCheck, ArrowRight, BadgePercent, AlarmClock, Ban, ClipboardCheck } from 'lucide-react';
 import DashboardCharts from './DashboardCharts';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
@@ -130,22 +130,22 @@ export default async function DashboardPage() {
     topPerdasList: data.topPerdasList
   }));
 
-  // Build Depto Data (Top 5 perdas by Depto in DB history)
+  // Build Product Loss Data (Top 5 perdas by Product in DB history)
   const expiredCollections = await prisma.collection.findMany({
     where: { 
       storeId,
       expirationDate: { lte: now } 
     },
-    include: { product: { include: { department: true } } }
+    include: { product: true }
   });
 
-  const deptoMap = new Map<string, number>();
+  const productLossMap = new Map<string, number>();
   expiredCollections.forEach(c => {
-    const deptName = c.product?.department?.name || 'Sem Depto';
-    deptoMap.set(deptName, (deptoMap.get(deptName) || 0) + 1);
+    const productName = c.product?.description || 'Desconhecido';
+    productLossMap.set(productName, (productLossMap.get(productName) || 0) + 1);
   });
 
-  const deptoData = Array.from(deptoMap.entries())
+  const deptoData = Array.from(productLossMap.entries())
     .map(([name, perdas]) => ({ name, perdas }))
     .sort((a, b) => b.perdas - a.perdas)
     .slice(0, 5);
@@ -159,11 +159,11 @@ export default async function DashboardPage() {
         <Link href="/relatorios?filter=expiring_30" className="bg-gradient-to-br from-green-50 to-white p-5 rounded-2xl border border-green-100 shadow-sm hover:shadow-md transition-all group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm text-green-700 font-semibold mb-1">À Recuperar (30d)</p>
+              <p className="text-sm text-green-700 font-semibold mb-1">À Recuperar (30 dias)</p>
               <h3 className="text-3xl font-black text-green-900 tracking-tight">{ofertaGreen}</h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-green-100/50 text-green-600 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-              <Tag className="w-5 h-5" />
+              <BadgePercent className="w-5 h-5" />
             </div>
           </div>
         </Link>
@@ -171,11 +171,11 @@ export default async function DashboardPage() {
         <Link href="/relatorios?filter=expiring_15" className="bg-gradient-to-br from-yellow-50 to-white p-5 rounded-2xl border border-yellow-100 shadow-sm hover:shadow-md transition-all group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm text-yellow-700 font-semibold mb-1">Vencem em 15d</p>
+              <p className="text-sm text-yellow-700 font-semibold mb-1">Vencem em (15 dias)</p>
               <h3 className="text-3xl font-black text-yellow-900 tracking-tight">{expiringYellow}</h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-yellow-100/50 text-yellow-600 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-              <AlertTriangle className="w-5 h-5" />
+              <AlarmClock className="w-5 h-5" />
             </div>
           </div>
         </Link>
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
               <h3 className="text-3xl font-black text-red-900 tracking-tight">{expiredRed}</h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-red-100/50 text-red-600 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-              <PackageX className="w-5 h-5" />
+              <Ban className="w-5 h-5" />
             </div>
           </div>
         </Link>
@@ -199,7 +199,7 @@ export default async function DashboardPage() {
               <h3 className="text-3xl font-black text-blue-900 tracking-tight">{coletasHoje}</h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <ScanLine className="w-5 h-5" />
+              <ClipboardCheck className="w-5 h-5" />
             </div>
           </div>
         </Link>
