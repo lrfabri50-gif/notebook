@@ -63,11 +63,7 @@ export default function ColetaPage() {
         ]
       });
       html5QrCode.start(
-        { 
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+        { facingMode: "environment" },
         { fps: 20, qrbox: { width: 300, height: 150 } },
         (decodedText) => {
           setBarcode(decodedText);
