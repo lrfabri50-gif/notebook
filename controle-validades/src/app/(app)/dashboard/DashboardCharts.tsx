@@ -105,8 +105,12 @@ export default function DashboardCharts({ evolutionData, deptoData }: DashboardC
             <BarChart data={deptoData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
               <XAxis type="number" hide />
               <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} width={120} />
-              <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}/>
-              <Bar dataKey="perdas" fill="#f97316" radius={[0, 6, 6, 0]} barSize={20} />
+              <Tooltip 
+                cursor={{fill: '#f8fafc'}} 
+                contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                formatter={(value: number) => [`${value} un`, 'Quantidade']}
+              />
+              <Bar dataKey="quantidade" fill="#ef4444" radius={[0, 6, 6, 0]} barSize={20} />
             </BarChart>
           </ResponsiveContainer>
         </div>

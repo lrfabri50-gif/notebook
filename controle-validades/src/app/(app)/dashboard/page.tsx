@@ -142,12 +142,13 @@ export default async function DashboardPage() {
   const productLossMap = new Map<string, number>();
   expiredCollections.forEach(c => {
     const productName = c.product?.description || 'Desconhecido';
-    productLossMap.set(productName, (productLossMap.get(productName) || 0) + 1);
+    const qtd = c.quantity || 0;
+    productLossMap.set(productName, (productLossMap.get(productName) || 0) + qtd);
   });
 
   const deptoData = Array.from(productLossMap.entries())
-    .map(([name, perdas]) => ({ name, perdas }))
-    .sort((a, b) => b.perdas - a.perdas)
+    .map(([name, quantidade]) => ({ name, quantidade }))
+    .sort((a, b) => b.quantidade - a.quantidade)
     .slice(0, 5);
 
   return (
