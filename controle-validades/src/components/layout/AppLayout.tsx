@@ -21,8 +21,8 @@ import clsx from 'clsx';
 
 const menuItems = [
   { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
-  { href: '/produtos', label: 'Produtos', icon: Box, roles: ['admin', 'manager'] },
-  { href: '/departamentos', label: 'Departamentos', icon: Layers, roles: ['admin', 'manager'] },
+  { href: '/produtos', label: 'Produtos', icon: Box, roles: ['admin', 'manager', 'operator'] },
+  { href: '/departamentos', label: 'Departamentos', icon: Layers, roles: ['admin', 'manager', 'operator'] },
   { href: '/usuarios', label: 'Usuários', icon: Users, roles: ['admin', 'manager'] },
   { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager'] },

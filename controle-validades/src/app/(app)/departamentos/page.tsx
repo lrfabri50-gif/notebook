@@ -2,9 +2,17 @@ import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { createDepartment, deleteDepartment } from './actions';
 import { Trash2, Plus } from 'lucide-react';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export default async function DepartamentosPage() {
+  const session = await getSession();
+  if (!session || !session.storeId) {
+    redirect('/login');
+  }
+
   const departments = await prisma.department.findMany({
+    where: { storeId: session.storeId as string },
     orderBy: { createdAt: 'desc' }
   });
 
