@@ -320,7 +320,7 @@ export default async function DashboardPage() {
       {/* FOOTER LOGO */}
       <div className="flex flex-col items-center justify-center pt-6 pb-2 gap-2">
         <div className="w-40 flex items-center justify-center">
-          <img src="/logo-empresa.png" alt="Logo Empresa" className="w-full h-auto object-contain" />
+          <img src="/logo-empresa.png" alt="Logo Empresa" className="w-full h-auto object-contain mix-blend-multiply" />
         </div>
         <span className="text-[10px] text-slate-400 text-center px-4 leading-tight whitespace-nowrap mt-1">
           &copy; 2026 Artos Consultoria Empresarial. Todos os direitos reservados.
