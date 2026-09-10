@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -12,8 +12,8 @@ import {
   ScanLine, 
   CreditCard, 
   HelpCircle,
-  List,
   Menu,
+  X,
   LogOut
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -31,9 +31,9 @@ const menuItems = [
 
 const mobileItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/vencimentos', label: 'Vencimentos', icon: List },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
   { href: '/coletar', label: 'Coletar', icon: ScanLine },
-  { href: '#', label: 'Menu', icon: Menu }, // Opens a drawer or similar
+  { href: '#menu', label: 'Menu', icon: Menu }, 
 ];
 
 export function AppLayout({ 
@@ -47,6 +47,7 @@ export function AppLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -59,7 +60,7 @@ export function AppLayout({
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
+    <div className="flex flex-col h-screen w-full bg-background overflow-hidden relative">
       
       {/* Desktop Header / Top Navigation */}
       <header className="hidden md:flex h-16 bg-primary items-center justify-between px-6 shadow-md z-10 w-full shrink-0 gap-4">
@@ -123,23 +124,82 @@ export function AppLayout({
         {children}
       </main>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+          <div 
+            className="absolute bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-xl overflow-hidden flex flex-col max-h-[80vh] animate-in slide-in-from-bottom-10"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold text-slate-800">Menu Principal</h3>
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 rounded-full text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4 flex flex-col gap-2">
+              <div className="bg-slate-50 p-3 rounded-lg mb-2 flex items-center justify-between border">
+                <span className="text-sm font-medium text-slate-700">{storeName}</span>
+                <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full uppercase font-bold">{userRole}</span>
+              </div>
+              
+              {menuItems.filter(item => item.roles.includes(userRole)).map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={clsx(
+                      'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
+                      isActive 
+                        ? 'bg-primary text-white' 
+                        : 'bg-white border border-slate-100 text-slate-700 hover:bg-slate-50'
+                    )}
+                  >
+                    <Icon className={clsx("w-5 h-5", isActive ? "text-white" : "text-primary")} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              
+              <button 
+                onClick={handleLogout} 
+                className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold border border-red-100"
+              >
+                <LogOut className="w-5 h-5" /> Sair do Sistema
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-primary text-white flex justify-around items-center h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-50">
         {mobileItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isMenu = item.href === '#menu';
+          const isActive = !isMenu && pathname === item.href;
           return (
-            <Link 
+            <button
               key={item.label} 
-              href={item.href}
+              onClick={(e) => {
+                if (isMenu) {
+                  e.preventDefault();
+                  setIsMobileMenuOpen(!isMobileMenuOpen);
+                } else {
+                  router.push(item.href);
+                }
+              }}
               className={clsx(
                 "flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors",
-                isActive ? "text-white bg-white/10" : "text-white/70"
+                (isActive || (isMenu && isMobileMenuOpen)) ? "text-white bg-white/10" : "text-white/70"
               )}
             >
               <Icon className="w-6 h-6" />
               <span className="text-[10px] font-medium">{item.label}</span>
-            </Link>
+            </button>
           );
         })}
       </nav>

@@ -154,7 +154,7 @@ export default function ColetaPage() {
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">Vencimento</label>
                   <input type="date" value={expiration} onChange={(e)=>setExpiration(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" required />
