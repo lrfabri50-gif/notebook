@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Download, FileText, Table, MessageCircle } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -81,34 +81,23 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
   };
 
   const handleExportWhatsApp = () => {
-    let message = `*Relatório de Validades* 📅\nGerado em: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
-
-    const expired = data.filter(d => d.statusLabel === 'Vencido');
-    const warning = data.filter(d => d.statusLabel !== 'Vencido' && d.statusLabel !== 'OK');
-    const ok = data.filter(d => d.statusLabel === 'OK');
-
-    if (expired.length > 0) {
-      message += `⚠️ *Vencidos:*\n`;
-      expired.forEach(d => {
-        message += `- ${d.productDesc} (Lote: ${d.batch}) - Qtd: ${d.quantity}\n`;
-      });
-      message += `\n`;
+    if (data.length === 0) {
+      alert("Nenhum dado para exportar.");
+      return;
     }
 
-    if (warning.length > 0) {
-      message += `⏳ *Próximos a Vencer:*\n`;
-      warning.forEach(d => {
-        message += `- ${d.productDesc} (Vence em ${d.statusLabel}) - Qtd: ${d.quantity}\n`;
-      });
-      message += `\n`;
-    }
+    let message = `*Relatório de Validades*\n_Gerado em: ${new Date().toLocaleDateString('pt-BR')}_\n\n`;
 
-    if (ok.length > 0) {
-      message += `✅ *No Prazo:*\n`;
-      ok.forEach(d => {
-        message += `- ${d.productDesc} (${d.expirationStr})\n`;
-      });
-    }
+    data.forEach(row => {
+      message += `*${row.productDesc}*\n`;
+      message += `Status: ${row.statusLabel}\n`;
+      message += `Vencimento: ${row.expirationStr}\n`;
+      message += `Qtd: ${row.quantity}\n`;
+      if (row.priceChange) {
+        message += `*Novo Preço: R$ ${row.priceChange}*\n`;
+      }
+      message += `-----------------\n`;
+    });
 
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
