@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { createCollection } from './actions';
+import { createCollection, getProductByBarcode } from './actions';
 import { useRouter } from 'next/navigation';
 
 export default function ColetaPage() {
@@ -16,7 +16,38 @@ export default function ColetaPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [showNotFoundModal, setShowNotFoundModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [productInfo, setProductInfo] = useState<{ description: string, department: string } | null>(null);
+  
   const router = useRouter();
+
+  // Debounced product lookup
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (barcode.length < 3) {
+        setProductInfo(null);
+        return;
+      }
+      setIsSearchingProduct(true);
+      try {
+        const product = await getProductByBarcode(barcode);
+        if (product) {
+          setProductInfo(product);
+          setShowNotFoundModal(false);
+        } else {
+          setProductInfo(null);
+          setShowNotFoundModal(true);
+        }
+      } catch (err) {
+        console.error("Error looking up product", err);
+      } finally {
+        setIsSearchingProduct(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchProduct, 600);
+    return () => clearTimeout(debounceTimer);
+  }, [barcode]);
 
   useEffect(() => {
     let html5QrCode: Html5Qrcode;
@@ -37,8 +68,6 @@ export default function ColetaPage() {
         (decodedText) => {
           setBarcode(decodedText);
           stopScanner(html5QrCode);
-          // Simulate product lookup
-          if (decodedText === '123') setShowNotFoundModal(true);
         },
         () => {}
       ).catch(err => console.error(err));
@@ -61,6 +90,10 @@ export default function ColetaPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcode) return;
+    if (!productInfo) {
+      setShowNotFoundModal(true);
+      return;
+    }
     
     setLoading(true);
     const formData = new FormData();
@@ -81,6 +114,7 @@ export default function ColetaPage() {
     if (res?.success) {
       alert(`Coleta salva com sucesso!`);
       setBarcode('');
+      setProductInfo(null);
       setExpiration('');
       setQuantity('1');
       setBatch('');
@@ -98,9 +132,20 @@ export default function ColetaPage() {
         {/* Desktop Quick Insert Line */}
         <div className="hidden md:block p-6">
           <form onSubmit={handleSubmit} className="flex gap-4 items-end">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <label className="block text-xs font-medium text-slate-500 mb-1">Cód. Barras</label>
               <input type="text" value={barcode} onChange={(e)=>setBarcode(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="0000000000" required />
+              
+              {/* Desktop Product Info Display */}
+              {isSearchingProduct && (
+                <div className="absolute top-[110%] left-0 text-xs text-primary font-medium">Buscando...</div>
+              )}
+              {!isSearchingProduct && productInfo && (
+                <div className="absolute top-[110%] left-0 text-xs text-slate-600 truncate max-w-full">
+                  <span className="font-bold text-slate-800">{productInfo.description}</span>
+                  {productInfo.department && <span className="ml-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px]">{productInfo.department}</span>}
+                </div>
+              )}
             </div>
             <div className="w-32">
               <label className="block text-xs font-medium text-slate-500 mb-1">Vencimento</label>
@@ -162,6 +207,22 @@ export default function ColetaPage() {
                   <Camera className="w-6 h-6" />
                 </button>
               </div>
+
+              {/* Mobile Product Info Display */}
+              {barcode.length >= 3 && (
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center min-h-[60px] text-center">
+                  {isSearchingProduct ? (
+                    <span className="text-sm font-medium text-slate-500 animate-pulse">Buscando produto...</span>
+                  ) : productInfo ? (
+                    <>
+                      <span className="font-bold text-slate-800 leading-tight">{productInfo.description}</span>
+                      {productInfo.department && <span className="text-xs text-slate-500 mt-0.5">{productInfo.department}</span>}
+                    </>
+                  ) : (
+                    <span className="text-sm font-medium text-red-500">Produto não encontrado</span>
+                  )}
+                </div>
+              )}
               
               <div className="flex flex-col gap-4">
                 <div>

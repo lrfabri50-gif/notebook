@@ -51,3 +51,23 @@ export async function createCollection(formData: FormData) {
   
   return { success: true };
 }
+
+export async function getProductByBarcode(barcode: string) {
+  const session = await getSession();
+  if (!session?.storeId) return null;
+
+  const product = await prisma.product.findFirst({
+    where: { 
+      barcode,
+      storeId: session.storeId as string
+    },
+    include: { department: true }
+  });
+
+  if (!product) return null;
+
+  return {
+    description: product.description,
+    department: product.department?.name || ''
+  };
+}
