@@ -53,6 +53,7 @@ export default function ColetaPage() {
     if (isScanning) {
       html5QrCode = new Html5Qrcode("reader", {
         verbose: false,
+        useBarCodeDetectorIfSupported: true,
         formatsToSupport: [
           Html5QrcodeSupportedFormats.EAN_13,
           Html5QrcodeSupportedFormats.EAN_8,
@@ -63,8 +64,11 @@ export default function ColetaPage() {
         ]
       });
       html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 20, qrbox: { width: 300, height: 150 } },
+        { 
+          facingMode: "environment",
+          advanced: [{ focusMode: "continuous" }] as any
+        },
+        { fps: 15, qrbox: { width: 300, height: 150 } },
         (decodedText) => {
           setBarcode(decodedText);
           stopScanner(html5QrCode);
