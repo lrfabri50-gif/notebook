@@ -46,7 +46,7 @@ export default function ImportButton() {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 w-full"
       >
         <UploadCloud className="w-4 h-4" /> Importar CSV
       </button>

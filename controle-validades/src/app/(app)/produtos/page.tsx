@@ -44,20 +44,22 @@ export default async function ProdutosPage(props: { searchParams?: Promise<{ bar
           <h2 className="text-xl font-bold text-slate-800">Produtos</h2>
           <p className="text-sm text-slate-500">Gerencie o cadastro de produtos no sistema</p>
         </div>
-        <div className="flex gap-3">
-          <form method="GET" className="relative">
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <form method="GET" className="relative w-full sm:w-auto">
             <input 
               type="text" 
               name="search"
               defaultValue={searchParams?.search || ''}
               placeholder="Buscar por descrição ou código..."
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-64"
+              className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-full sm:w-64"
             />
             <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2">
               <Search className="w-4 h-4 text-slate-400" />
             </button>
           </form>
-          <ImportButton />
+          <div className="w-full sm:w-auto">
+            <ImportButton />
+          </div>
         </div>
       </div>
 
