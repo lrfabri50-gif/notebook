@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Download, FileText, FileSpreadsheet, MessageCircle } from 'lucide-react';
+import { Download, FileText, Table, MessageCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
