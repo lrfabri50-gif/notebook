@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export type ExportData = {
+  id: string;
   statusLabel: string;
   productDesc: string;
   barcode: string;
@@ -13,6 +14,7 @@ export type ExportData = {
   expirationStr: string;
   batch: string;
   quantity: number;
+  priceChange?: string;
 };
 
 export default function ExportButtons({ data }: { data: ExportData[] }) {
@@ -31,7 +33,7 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
         row.expirationStr,
         `"${row.batch}"`,
         row.quantity,
-        '""' // Linha vazia para "Alteração de Preço"
+        `"${row.priceChange || ''}"` // Usando o preço alterado
       ].join(';');
       csvContent += line + '\n';
     });
@@ -64,7 +66,7 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
       row.expirationStr,
       row.batch,
       row.quantity,
-      '' // Linha vazia para "Alteração de Preço"
+      row.priceChange || '' // Usando o preço alterado
     ]);
 
     autoTable(doc, {
