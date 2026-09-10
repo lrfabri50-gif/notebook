@@ -53,6 +53,7 @@ export default function ColetaPage() {
     let html5QrCode: Html5Qrcode;
     if (isScanning) {
       html5QrCode = new Html5Qrcode("reader", {
+        verbose: false,
         formatsToSupport: [
           Html5QrcodeSupportedFormats.EAN_13,
           Html5QrcodeSupportedFormats.EAN_8,
