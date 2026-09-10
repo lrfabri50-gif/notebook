@@ -108,9 +108,15 @@ export default function DashboardCharts({ evolutionData, deptoData }: DashboardC
               <Tooltip 
                 cursor={{fill: '#f8fafc'}} 
                 contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                formatter={(value: number) => [`${value} un`, 'Quantidade']}
+                labelFormatter={(label, payload) => {
+                  if (payload && payload.length) {
+                    const qtd = payload[0].payload.quantidade;
+                    return `${label} (${qtd} un)`;
+                  }
+                  return label;
+                }}
               />
-              <Bar dataKey="quantidade" fill="#ef4444" radius={[0, 6, 6, 0]} barSize={20} />
+              <Bar dataKey="perdas" fill="#ef4444" radius={[0, 6, 6, 0]} barSize={20} />
             </BarChart>
           </ResponsiveContainer>
         </div>

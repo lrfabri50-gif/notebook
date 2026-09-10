@@ -139,16 +139,20 @@ export default async function DashboardPage() {
     include: { product: true }
   });
 
-  const productLossMap = new Map<string, number>();
+  const productLossMap = new Map<string, { count: number; qtd: number }>();
   expiredCollections.forEach(c => {
     const productName = c.product?.description || 'Desconhecido';
     const qtd = c.quantity || 0;
-    productLossMap.set(productName, (productLossMap.get(productName) || 0) + qtd);
+    const existing = productLossMap.get(productName) || { count: 0, qtd: 0 };
+    productLossMap.set(productName, {
+      count: existing.count + 1,
+      qtd: existing.qtd + qtd
+    });
   });
 
   const deptoData = Array.from(productLossMap.entries())
-    .map(([name, quantidade]) => ({ name, quantidade }))
-    .sort((a, b) => b.quantidade - a.quantidade)
+    .map(([name, data]) => ({ name, perdas: data.count, quantidade: data.qtd }))
+    .sort((a, b) => b.perdas - a.perdas)
     .slice(0, 5);
 
   return (
