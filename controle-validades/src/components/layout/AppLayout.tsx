@@ -60,7 +60,7 @@ export function AppLayout({
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-background overflow-hidden relative">
+    <div className="flex flex-col h-[100dvh] w-full bg-background overflow-hidden relative">
       
       {/* Desktop Header / Top Navigation */}
       <header className="hidden md:flex h-16 bg-primary items-center justify-between px-6 shadow-md z-10 w-full shrink-0 gap-4">
@@ -128,7 +128,7 @@ export function AppLayout({
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
           <div 
-            className="absolute bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-xl overflow-hidden flex flex-col max-h-[80vh] animate-in slide-in-from-bottom-10"
+            className="absolute bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-xl overflow-hidden flex flex-col max-h-[80dvh] animate-in slide-in-from-bottom-10"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b">
