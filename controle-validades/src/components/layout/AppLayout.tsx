@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   LogOut,
-  Smartphone
+  Smartphone,
+  RefreshCw
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -31,10 +32,11 @@ const menuItems = [
 ];
 
 const mobileItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
-  { href: '/coletar', label: 'Coletar', icon: ScanLine },
-  { href: '#menu', label: 'Menu', icon: Menu }, 
+  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager'] },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager'] },
+  { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
+  { href: '#refresh', label: 'Atualizar', icon: RefreshCw, roles: ['admin', 'manager', 'operator'] },
+  { href: '#menu', label: 'Menu', icon: Menu, roles: ['admin', 'manager', 'operator'] }, 
 ];
 
 export function AppLayout({ 
@@ -227,10 +229,11 @@ export function AppLayout({
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-primary text-white flex justify-around items-center h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-50">
-        {mobileItems.map((item) => {
+        {mobileItems.filter(item => item.roles.includes(userRole)).map((item) => {
           const Icon = item.icon;
           const isMenu = item.href === '#menu';
-          const isActive = !isMenu && pathname === item.href;
+          const isRefresh = item.href === '#refresh';
+          const isActive = !isMenu && !isRefresh && pathname === item.href;
           return (
             <button
               key={item.label} 
@@ -238,13 +241,16 @@ export function AppLayout({
                 if (isMenu) {
                   e.preventDefault();
                   setIsMobileMenuOpen(!isMobileMenuOpen);
+                } else if (isRefresh) {
+                  e.preventDefault();
+                  window.location.reload();
                 } else {
                   router.push(item.href);
                 }
               }}
               className={clsx(
                 "flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors",
-                (isActive || (isMenu && isMobileMenuOpen)) ? "text-white bg-white/10" : "text-white/70"
+                (isActive || (isMenu && isMobileMenuOpen)) ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
               )}
             >
               <Icon className="w-6 h-6" />
