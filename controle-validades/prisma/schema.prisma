@@ -93,6 +93,7 @@ model Collection {
   batch          String?   
   shelfLocation  String?   
   status         String    @default("pending") 
+  priceChange    String?
   collectedAt    DateTime? @default(now()) 
   auditedAt      DateTime? 
 

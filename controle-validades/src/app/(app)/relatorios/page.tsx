@@ -51,7 +51,8 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
     department: c.product?.department?.name || '---',
     expirationStr: c.expirationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
     batch: c.batch || '-',
-    quantity: c.quantity
+    quantity: c.quantity,
+    priceChange: c.priceChange || undefined
   }));
 
   return (
@@ -84,7 +85,7 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
         </div>
       </div>
 
-      <RelatoriosTable initialData={exportData} />
+      <RelatoriosTable initialData={exportData} key={filter} />
     </div>
   );
 }

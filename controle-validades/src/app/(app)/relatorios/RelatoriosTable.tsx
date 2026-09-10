@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import ExportButtons, { ExportData } from './ExportButtons';
+import { updateCollectionPrice } from './actions';
 
 interface RelatoriosTableProps {
   initialData: ExportData[];
@@ -9,9 +10,21 @@ interface RelatoriosTableProps {
 
 export default function RelatoriosTable({ initialData }: RelatoriosTableProps) {
   const [data, setData] = useState<ExportData[]>(initialData);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const handlePriceChange = (id: string, newPrice: string) => {
     setData(prev => prev.map(item => item.id === id ? { ...item, priceChange: newPrice } : item));
+  };
+
+  const handleSavePrice = async (id: string, newPrice: string) => {
+    try {
+      setSavingId(id);
+      await updateCollectionPrice(id, newPrice);
+    } catch (error) {
+      console.error('Failed to save price', error);
+    } finally {
+      setSavingId(null);
+    }
   };
 
   return (
@@ -78,10 +91,16 @@ export default function RelatoriosTable({ initialData }: RelatoriosTableProps) {
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-xs">R$</span>
                         <input 
                           type="text" 
-                          className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" 
+                          className={`w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none ${savingId === row.id ? 'opacity-50' : ''}`}
                           placeholder="0,00"
                           value={row.priceChange || ''}
                           onChange={(e) => handlePriceChange(row.id, e.target.value)}
+                          onBlur={(e) => handleSavePrice(row.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
                         />
                       </div>
                     </td>
