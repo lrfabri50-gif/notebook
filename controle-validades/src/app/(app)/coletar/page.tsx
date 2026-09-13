@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 function BarcodeScanner({ onResult, onClose }: { onResult: (text: string) => void, onClose: () => void }) {
   const { ref } = useZxing({
     onDecodeResult(result) {
-      onResult(result.getText());
+      onResult(result.rawValue);
     },
     onError(error) {
       // Ignore common Not-found errors
