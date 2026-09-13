@@ -55,6 +55,7 @@ export default function ColetaPage() {
     const initScanner = async () => {
       // Passar os formatos no construtor corrige o erro TypeScript e otimiza a leitura
       html5QrCode = new Html5Qrcode("reader", {
+        verbose: false,
         formatsToSupport: [
           Html5QrcodeSupportedFormats.EAN_13,
           Html5QrcodeSupportedFormats.EAN_8,
