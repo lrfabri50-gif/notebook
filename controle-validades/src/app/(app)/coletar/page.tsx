@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
-import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { createCollection, getProductByBarcode } from './actions';
 import { useRouter } from 'next/navigation';
 
@@ -49,65 +49,44 @@ export default function ColetaPage() {
   }, [barcode]);
 
   useEffect(() => {
-    let codeReader: BrowserMultiFormatReader;
-    let isMounted = true;
-
+    let html5QrCode: Html5Qrcode;
+    
     if (isScanning) {
-      const hints = new Map();
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.EAN_13,
-        BarcodeFormat.EAN_8,
-        BarcodeFormat.UPC_A,
-        BarcodeFormat.UPC_E,
-        BarcodeFormat.CODE_128,
-        BarcodeFormat.QR_CODE
-      ]);
-      
-      codeReader = new BrowserMultiFormatReader(hints, 500); // 500ms delay between decodes to save CPU
+      // Usar a estrutura exata que funcionava antes, apenas adicionando os formatos 
+      // para resolver o problema de LENTIDÃO (focar apenas em código de produto 1D)
+      html5QrCode = new Html5Qrcode("reader", {
+        verbose: false,
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128
+        ]
+      });
 
-      codeReader.listVideoInputDevices()
-        .then(videoInputDevices => {
-          if (!isMounted) return;
-
-          let selectedDeviceId = undefined;
-          
-          if (videoInputDevices.length > 0) {
-            const backCameras = videoInputDevices.filter(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('traseira') || c.label.toLowerCase().includes('environment'));
-            if (backCameras.length > 0) {
-              const mainBack = backCameras.find(c => !c.label.toLowerCase().includes('ultra') && !c.label.toLowerCase().includes('0.5')) || backCameras[0];
-              selectedDeviceId = mainBack.deviceId;
-            }
-          }
-
-          // Inicia a câmera no elemento de vídeo
-          codeReader.decodeFromVideoDevice(
-            selectedDeviceId,
-            'scanner-video',
-            (result, err) => {
-              if (result && isMounted) {
-                setBarcode(result.getText());
-                stopScanner(codeReader);
-              }
-            }
-          ).catch(e => console.error("Falha ao iniciar camera ZXing", e));
-        })
-        .catch(err => {
-          console.error("Erro listando cameras", err);
-        });
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 15, qrbox: { width: 250, height: 150 } },
+        (decodedText) => {
+          setBarcode(decodedText);
+          stopScanner(html5QrCode);
+        },
+        () => {}
+      ).catch(err => console.error("Erro no leitor:", err));
     }
 
     return () => {
-      isMounted = false;
-      if (codeReader) {
-        codeReader.reset();
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(console.error);
       }
     };
   }, [isScanning]);
 
-  const stopScanner = (readerInstance?: BrowserMultiFormatReader) => {
+  const stopScanner = (scannerInstance?: Html5Qrcode) => {
     setIsScanning(false);
-    if (readerInstance) {
-      readerInstance.reset();
+    if (scannerInstance && scannerInstance.isScanning) {
+      scannerInstance.stop().catch(console.error);
     }
   };
 
@@ -216,7 +195,7 @@ export default function ColetaPage() {
                   100% { top: 0%; }
                 }
               `}</style>
-              <video id="scanner-video" className="flex-1 w-full h-full object-cover bg-black relative" playsInline muted autoPlay></video>
+              <div id="reader" className="flex-1 w-full bg-black relative"></div>
               {/* Overlay Laser Animado */}
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
                 <div className="w-[280px] h-[150px] border-2 border-white/20 rounded-lg relative overflow-hidden">
