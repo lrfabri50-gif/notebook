@@ -4,6 +4,7 @@ import { Users, Shield, ShieldCheck, User } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import UserFormModal from './UserFormModal';
+import DeleteUserButton from './DeleteUserButton';
 
 export default async function UsuariosPage() {
   const session = await getSession();
@@ -73,16 +74,21 @@ export default async function UsuariosPage() {
                     {u.createdAt ? u.createdAt.toLocaleDateString('pt-BR') : '---'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <UserFormModal 
-                      isAdmin={isAdmin}
-                      userToEdit={{
-                        id: u.id,
-                        name: u.name || '',
-                        email: u.email,
-                        phoneWhatsapp: u.phoneWhatsapp || '',
-                        role: u.role
-                      }} 
-                    />
+                    <div className="flex justify-end items-center gap-1">
+                      <UserFormModal 
+                        isAdmin={isAdmin}
+                        userToEdit={{
+                          id: u.id,
+                          name: u.name || '',
+                          email: u.email,
+                          phoneWhatsapp: u.phoneWhatsapp || '',
+                          role: u.role
+                        }} 
+                      />
+                      {isAdmin && u.id !== session.userId && (
+                        <DeleteUserButton userId={u.id} userName={u.name || ''} />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -52,6 +52,11 @@ export async function createUser(data: UserFormData) {
 
   if (!data.password) throw new Error("A senha é obrigatória para novos usuários.");
 
+  const userCount = await prisma.user.count({ where: { storeId: session.storeId as string } });
+  if (userCount >= 4) {
+    return { error: 'O limite do seu plano é de 4 usuários (1 Administrador e 3 Operadores).' };
+  }
+
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
   if (existing) {
     return { error: 'Este e-mail já está em uso.' };
