@@ -11,9 +11,11 @@ datasource db {
 model Subscription {
   id                 String    @id @default(uuid())
   userId             String    
-  basePlanPrice      Float     @default(19.99) 
-  whatsappAddon      Boolean   @default(false)
-  whatsappAddonPrice Float     @default(4.99) 
+  planName           String    @default("trial")
+  maxUsers           Int       @default(4)
+  basePlanPrice      Float     @default(0) 
+  whatsappAddon      Boolean   @default(true)
+  whatsappAddonPrice Float     @default(0) 
   status             String    @default("trial") 
   trialStartDate     DateTime? @default(now()) 
   trialEndDate       DateTime? 

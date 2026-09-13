@@ -50,11 +50,18 @@ export async function createUser(data: UserFormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const store = await prisma.store.findUnique({
+    where: { id: session.storeId as string },
+    include: { subscription: true }
+  });
+
+  const maxUsers = store?.subscription?.maxUsers || 1; // Default fallback
+
   if (!data.password) throw new Error("A senha é obrigatória para novos usuários.");
 
   const userCount = await prisma.user.count({ where: { storeId: session.storeId as string } });
-  if (userCount >= 4) {
-    return { error: 'O limite do seu plano é de 4 usuários (1 Administrador e 3 Operadores).' };
+  if (userCount >= maxUsers) {
+    return { error: `O limite do seu plano é de ${maxUsers} usuário(s). Acesse 'Meu Plano' para fazer o upgrade se necessário.` };
   }
 
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
