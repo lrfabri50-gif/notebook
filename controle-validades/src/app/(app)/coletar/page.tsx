@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 import { createCollection, getProductByBarcode } from './actions';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +18,7 @@ export default function ColetaPage() {
   const [loading, setLoading] = useState(false);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
   const [productInfo, setProductInfo] = useState<{ description: string, department: string } | null>(null);
+  const [scannerControls, setScannerControls] = useState<IScannerControls | null>(null);
   
   const router = useRouter();
 
@@ -49,45 +50,43 @@ export default function ColetaPage() {
   }, [barcode]);
 
   useEffect(() => {
-    let html5QrCode: Html5Qrcode;
+    let localControls: IScannerControls | null = null;
     
     if (isScanning) {
-      // Usar a estrutura exata que funcionava antes, apenas adicionando os formatos 
-      // para resolver o problema de LENTIDÃO (focar apenas em código de produto 1D)
-      html5QrCode = new Html5Qrcode("reader", {
-        verbose: false,
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.CODE_128
-        ]
+      const codeReader = new BrowserMultiFormatReader();
+      
+      codeReader.decodeFromConstraints(
+        { video: { facingMode: "environment" } },
+        "reader",
+        (result, error) => {
+          if (result) {
+            setBarcode(result.getText());
+            if (localControls) localControls.stop();
+            setScannerControls(null);
+            setIsScanning(false);
+          }
+        }
+      ).then((controls) => {
+        localControls = controls;
+        setScannerControls(controls);
+      }).catch(err => {
+        console.error("Erro no leitor ZXing:", err);
       });
-
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 15, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          setBarcode(decodedText);
-          stopScanner(html5QrCode);
-        },
-        () => {}
-      ).catch(err => console.error("Erro no leitor:", err));
     }
 
     return () => {
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(console.error);
+      if (localControls) {
+        localControls.stop();
       }
     };
   }, [isScanning]);
 
-  const stopScanner = (scannerInstance?: Html5Qrcode) => {
-    setIsScanning(false);
-    if (scannerInstance && scannerInstance.isScanning) {
-      scannerInstance.stop().catch(console.error);
+  const stopScanner = () => {
+    if (scannerControls) {
+      scannerControls.stop();
+      setScannerControls(null);
     }
+    setIsScanning(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -195,7 +194,7 @@ export default function ColetaPage() {
                   100% { top: 0%; }
                 }
               `}</style>
-              <div id="reader" className="flex-1 w-full bg-black relative"></div>
+              <video id="reader" className="flex-1 w-full bg-black relative object-cover" autoPlay playsInline muted></video>
               {/* Overlay Laser Animado */}
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
                 <div className="w-[280px] h-[150px] border-2 border-white/20 rounded-lg relative overflow-hidden">
