@@ -2,9 +2,58 @@
 
 import React, { useState, useEffect } from 'react';
 import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
-import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import { useZxing } from 'react-zxing';
 import { createCollection, getProductByBarcode } from './actions';
 import { useRouter } from 'next/navigation';
+
+function BarcodeScanner({ onResult, onClose }: { onResult: (text: string) => void, onClose: () => void }) {
+  const { ref } = useZxing({
+    onDecodeResult(result) {
+      onResult(result.getText());
+    },
+    onError(error) {
+      // Ignore common Not-found errors
+    }
+  });
+
+  return (
+    <div className="relative bg-black rounded-xl overflow-hidden aspect-[4/5] flex flex-col">
+      <style>{`
+        @keyframes scanLine {
+          0% { top: 0%; }
+          50% { top: 100%; }
+          100% { top: 0%; }
+        }
+      `}</style>
+      <video ref={ref} className="flex-1 w-full h-full bg-black relative object-cover" autoPlay playsInline muted />
+      {/* Overlay Laser Animado */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
+        <div className="w-[280px] h-[150px] border-2 border-white/20 rounded-lg relative overflow-hidden">
+          <div 
+            className="w-full h-0.5 bg-red-500 absolute left-0" 
+            style={{ 
+              boxShadow: '0 0 8px 2px rgba(239,68,68,0.8)',
+              animation: 'scanLine 2.5s ease-in-out infinite' 
+            }}
+          ></div>
+        </div>
+      </div>
+      
+      <button 
+        type="button"
+        onClick={onClose} 
+        className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur border border-white/20 text-white p-2 rounded-full z-20"
+      >
+        <X className="w-6 h-6" />
+      </button>
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
+        <p className="bg-black/70 backdrop-blur text-white px-5 py-2 rounded-full text-sm font-medium border border-white/10 shadow-lg">
+          Aponte para o código de barras
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function ColetaPage() {
   const [barcode, setBarcode] = useState('');
@@ -18,7 +67,6 @@ export default function ColetaPage() {
   const [loading, setLoading] = useState(false);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
   const [productInfo, setProductInfo] = useState<{ description: string, department: string } | null>(null);
-  const [scannerControls, setScannerControls] = useState<IScannerControls | null>(null);
   
   const router = useRouter();
 
@@ -49,43 +97,8 @@ export default function ColetaPage() {
     return () => clearTimeout(debounceTimer);
   }, [barcode]);
 
-  useEffect(() => {
-    let localControls: IScannerControls | null = null;
-    
-    if (isScanning) {
-      const codeReader = new BrowserMultiFormatReader();
-      
-      codeReader.decodeFromConstraints(
-        { video: { facingMode: "environment" } },
-        "reader",
-        (result, error) => {
-          if (result) {
-            setBarcode(result.getText());
-            if (localControls) localControls.stop();
-            setScannerControls(null);
-            setIsScanning(false);
-          }
-        }
-      ).then((controls) => {
-        localControls = controls;
-        setScannerControls(controls);
-      }).catch(err => {
-        console.error("Erro no leitor ZXing:", err);
-      });
-    }
-
-    return () => {
-      if (localControls) {
-        localControls.stop();
-      }
-    };
-  }, [isScanning]);
-
-  const stopScanner = () => {
-    if (scannerControls) {
-      scannerControls.stop();
-      setScannerControls(null);
-    }
+  const handleScanResult = (decodedText: string) => {
+    setBarcode(decodedText);
     setIsScanning(false);
   };
 
@@ -186,40 +199,10 @@ export default function ColetaPage() {
         {/* Mobile View */}
         <div className="md:hidden p-4 space-y-4">
           {isScanning ? (
-            <div className="relative bg-black rounded-xl overflow-hidden aspect-[4/5] flex flex-col">
-              <style>{`
-                @keyframes scanLine {
-                  0% { top: 0%; }
-                  50% { top: 100%; }
-                  100% { top: 0%; }
-                }
-              `}</style>
-              <video id="reader" className="flex-1 w-full bg-black relative object-cover" autoPlay playsInline muted></video>
-              {/* Overlay Laser Animado */}
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
-                <div className="w-[280px] h-[150px] border-2 border-white/20 rounded-lg relative overflow-hidden">
-                  <div 
-                    className="w-full h-0.5 bg-red-500 absolute left-0" 
-                    style={{ 
-                      boxShadow: '0 0 8px 2px rgba(239,68,68,0.8)',
-                      animation: 'scanLine 2.5s ease-in-out infinite' 
-                    }}
-                  ></div>
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => stopScanner()} 
-                className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur border border-white/20 text-white p-2 rounded-full z-20"
-              >
-                <X className="w-6 h-6" />
-              </button>
-              <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
-                <p className="bg-black/70 backdrop-blur text-white px-5 py-2 rounded-full text-sm font-medium border border-white/10 shadow-lg">
-                  Aponte para o código de barras
-                </p>
-              </div>
-            </div>
+            <BarcodeScanner 
+              onResult={handleScanResult} 
+              onClose={() => setIsScanning(false)} 
+            />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex gap-2">
