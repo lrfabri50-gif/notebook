@@ -53,7 +53,6 @@ export default function ColetaPage() {
     let isMounted = true;
 
     const initScanner = async () => {
-      // Passar os formatos no construtor corrige o erro TypeScript e otimiza a leitura
       html5QrCode = new Html5Qrcode("reader", {
         verbose: false,
         formatsToSupport: [
@@ -67,24 +66,17 @@ export default function ColetaPage() {
       });
       
       try {
-        let videoConstraints: any = { 
-          facingMode: "environment",
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 }
-        };
+        let cameraConfig: any = { facingMode: "environment" };
         
         try {
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0) {
-            const backCameras = devices.filter(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('traseira'));
+            const backCameras = devices.filter(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('traseira') || c.label.toLowerCase().includes('environment'));
             if (backCameras.length > 0) {
+              // Pegar a câmera traseira principal
               const mainBack = backCameras.find(c => !c.label.toLowerCase().includes('ultra') && !c.label.toLowerCase().includes('0.5')) || backCameras[0];
-              // Usar ID da câmera específica E solicitar alta resolução
-              videoConstraints = { 
-                deviceId: { exact: mainBack.id },
-                width: { ideal: 1280, min: 640 },
-                height: { ideal: 720, min: 480 }
-              };
+              // Passar o ID da câmera diretamente como string é o método mais seguro no iOS
+              cameraConfig = mainBack.id;
             }
           }
         } catch (e) {
@@ -93,24 +85,40 @@ export default function ColetaPage() {
 
         if (!isMounted || !isScanning) return;
 
-        await html5QrCode.start(
-          videoConstraints,
-          { 
-            fps: 15, 
-            qrbox: { width: 280, height: 150 },
-            // Tenta usar a API nativa do celular (muito mais rápida) se disponível
-            experimentalFeatures: {
-              useBarCodeDetectorIfSupported: true
-            }
-          } as any, // 'as any' para evitar erro de typings no experimentalFeatures
-          (decodedText) => {
-            setBarcode(decodedText);
-            stopScanner(html5QrCode);
-          },
-          () => {} // ignore scan errors
-        );
+        try {
+          await html5QrCode.start(
+            cameraConfig,
+            { 
+              fps: 15, 
+              qrbox: { width: 280, height: 150 },
+              // Tenta usar a API nativa do celular (muito mais rápida)
+              experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+              }
+            } as any,
+            (decodedText) => {
+              setBarcode(decodedText);
+              stopScanner(html5QrCode);
+            },
+            () => {} 
+          );
+        } catch (startError) {
+          console.warn("Falha com config preferida, tentando fallback...", startError);
+          // Fallback ultra-seguro caso o Safari bloqueie o ID específico
+          if (isMounted && isScanning) {
+            await html5QrCode.start(
+              { facingMode: "environment" },
+              { fps: 10, qrbox: { width: 280, height: 150 } },
+              (decodedText) => {
+                setBarcode(decodedText);
+                stopScanner(html5QrCode);
+              },
+              () => {}
+            );
+          }
+        }
       } catch (err) {
-        console.error("Erro ao iniciar câmera", err);
+        console.error("Erro fatal ao iniciar câmera", err);
       }
     };
 
