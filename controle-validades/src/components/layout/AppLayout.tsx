@@ -28,6 +28,7 @@ const menuItems = [
   { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager', 'operator'] },
   { href: '/meu-plano', label: 'Meu Plano', icon: CreditCard, roles: ['admin', 'manager', 'operator'] },
+  { href: '#refresh', label: 'Sincronizar', icon: RefreshCw, roles: ['admin', 'manager', 'operator'] },
   { href: '/ajuda', label: 'Ajuda', icon: HelpCircle, roles: ['admin', 'manager', 'operator'] },
 ];
 
@@ -51,7 +52,6 @@ export function AppLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -93,6 +93,20 @@ export function AppLayout({
         <nav className="flex-1 flex justify-center items-center h-full gap-2 overflow-x-auto hide-scrollbar px-2">
           {menuItems.filter(item => item.roles.includes(userRole)).map((item) => {
             const Icon = item.icon;
+            
+            if (item.href === '#refresh') {
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => window.location.reload()}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-white/80 hover:bg-white/10 hover:text-white"
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {item.label}
+                </button>
+              );
+            }
+
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -149,6 +163,23 @@ export function AppLayout({
               
               {menuItems.filter(item => item.roles.includes(userRole)).map((item) => {
                 const Icon = item.icon;
+                
+                if (item.href === '#refresh') {
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        window.location.reload();
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors bg-white border border-slate-100 text-slate-700 hover:bg-slate-50 w-full text-left"
+                    >
+                      <Icon className="w-5 h-5 text-primary" />
+                      {item.label}
+                    </button>
+                  );
+                }
+
                 const isActive = pathname === item.href;
                 return (
                   <Link
@@ -169,60 +200,12 @@ export function AppLayout({
               })}
               
               <button 
-                onClick={() => setShowInstallPrompt(true)}
-                className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-50 text-blue-700 font-bold border border-blue-100"
-              >
-                <Smartphone className="w-5 h-5" /> Instalar Aplicativo
-              </button>
-              
-              <button 
                 onClick={handleLogout} 
                 className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold border border-red-100"
               >
                 <LogOut className="w-5 h-5" /> Sair do Sistema
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Install App Prompt Modal */}
-      {showInstallPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowInstallPrompt(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowInstallPrompt(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 mx-auto">
-              <Smartphone className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-center text-slate-800 mb-2">Instalar Aplicativo</h3>
-            <p className="text-slate-500 text-center text-sm mb-6">
-              Tenha o sistema direto na tela do seu celular como um app nativo!
-            </p>
-            
-            <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h4 className="font-bold text-sm text-slate-800 mb-1 flex items-center gap-2">🍎 No iPhone (Safari)</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Toque no botão <strong>Compartilhar</strong> (quadrado com seta para cima) na barra inferior e depois em <strong>"Adicionar à Tela de Início"</strong>.
-                </p>
-              </div>
-              
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h4 className="font-bold text-sm text-slate-800 mb-1 flex items-center gap-2">🤖 No Android (Chrome)</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Toque nos <strong>3 pontinhos</strong> no canto superior direito e depois selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.
-                </p>
-              </div>
-            </div>
-            
-            <button 
-              onClick={() => setShowInstallPrompt(false)}
-              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors"
-            >
-              Entendi
-            </button>
           </div>
         </div>
       )}
