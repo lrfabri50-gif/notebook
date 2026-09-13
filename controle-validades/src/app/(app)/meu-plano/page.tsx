@@ -114,7 +114,7 @@ export default async function MeuPlanoPage() {
           
           <div className="mb-6 mt-2">
             <h3 className="text-2xl font-bold text-white">Plano Equipe</h3>
-            <p className="text-primary-foreground/80 mt-2">Para mercados que precisam delegar tarefas.</p>
+            <p className="text-primary-foreground/80 mt-2">Para lojas que precisam delegar tarefas.</p>
           </div>
           <div className="mb-8">
             <span className="text-4xl font-extrabold text-white">R$ 79,60</span>
