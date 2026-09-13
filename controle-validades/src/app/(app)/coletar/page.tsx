@@ -67,9 +67,11 @@ export default function ColetaPage() {
       });
       
       try {
-        // Tenta obter as câmeras para evitar a lente ultrawide do iPhone,
-        // que não tem foco automático para perto.
-        let cameraIdOrConfig: any = { facingMode: "environment" };
+        let videoConstraints: any = { 
+          facingMode: "environment",
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
+        };
         
         try {
           const devices = await Html5Qrcode.getCameras();
@@ -77,7 +79,12 @@ export default function ColetaPage() {
             const backCameras = devices.filter(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('traseira'));
             if (backCameras.length > 0) {
               const mainBack = backCameras.find(c => !c.label.toLowerCase().includes('ultra') && !c.label.toLowerCase().includes('0.5')) || backCameras[0];
-              cameraIdOrConfig = mainBack.id;
+              // Usar ID da câmera específica E solicitar alta resolução
+              videoConstraints = { 
+                deviceId: { exact: mainBack.id },
+                width: { ideal: 1280, min: 640 },
+                height: { ideal: 720, min: 480 }
+              };
             }
           }
         } catch (e) {
@@ -87,11 +94,15 @@ export default function ColetaPage() {
         if (!isMounted || !isScanning) return;
 
         await html5QrCode.start(
-          cameraIdOrConfig,
+          videoConstraints,
           { 
-            fps: 10, 
-            qrbox: { width: 280, height: 150 }
-          },
+            fps: 15, 
+            qrbox: { width: 280, height: 150 },
+            // Tenta usar a API nativa do celular (muito mais rápida) se disponível
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true
+            }
+          } as any, // 'as any' para evitar erro de typings no experimentalFeatures
           (decodedText) => {
             setBarcode(decodedText);
             stopScanner(html5QrCode);
@@ -220,16 +231,37 @@ export default function ColetaPage() {
         <div className="md:hidden p-4 space-y-4">
           {isScanning ? (
             <div className="relative bg-black rounded-xl overflow-hidden aspect-[4/5] flex flex-col">
-              <div id="reader" className="flex-1 w-full bg-black"></div>
-              {/* Overlay with red line is handled by html5-qrcode but we can style it */}
+              <style>{`
+                @keyframes scanLine {
+                  0% { top: 0%; }
+                  50% { top: 100%; }
+                  100% { top: 0%; }
+                }
+              `}</style>
+              <div id="reader" className="flex-1 w-full bg-black relative"></div>
+              {/* Overlay Laser Animado */}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
+                <div className="w-[280px] h-[150px] border-2 border-white/20 rounded-lg relative overflow-hidden">
+                  <div 
+                    className="w-full h-0.5 bg-red-500 absolute left-0" 
+                    style={{ 
+                      boxShadow: '0 0 8px 2px rgba(239,68,68,0.8)',
+                      animation: 'scanLine 2.5s ease-in-out infinite' 
+                    }}
+                  ></div>
+                </div>
+              </div>
+              
               <button 
                 onClick={() => stopScanner()} 
-                className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 backdrop-blur text-white p-2 rounded-full"
+                className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur border border-white/20 text-white p-2 rounded-full z-20"
               >
                 <X className="w-6 h-6" />
               </button>
-              <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-                <p className="bg-black/50 text-white px-4 py-1.5 rounded-full text-sm">Posicione o código de barras na mira</p>
+              <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
+                <p className="bg-black/70 backdrop-blur text-white px-5 py-2 rounded-full text-sm font-medium border border-white/10 shadow-lg">
+                  Aponte para o código de barras
+                </p>
               </div>
             </div>
           ) : (
