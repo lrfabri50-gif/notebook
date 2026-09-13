@@ -21,19 +21,19 @@ import {
 import clsx from 'clsx';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager'] },
+  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
   { href: '/produtos', label: 'Produtos', icon: Box, roles: ['admin', 'manager', 'operator'] },
   { href: '/departamentos', label: 'Departamentos', icon: Layers, roles: ['admin', 'manager', 'operator'] },
-  { href: '/usuarios', label: 'Usuários', icon: Users, roles: ['admin', 'manager'] },
+  { href: '/usuarios', label: 'Usuários', icon: Users, roles: ['admin', 'manager', 'operator'] },
   { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager'] },
-  { href: '/meu-plano', label: 'Meu Plano', icon: CreditCard, roles: ['admin'] },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager', 'operator'] },
+  { href: '/meu-plano', label: 'Meu Plano', icon: CreditCard, roles: ['admin', 'manager', 'operator'] },
   { href: '/ajuda', label: 'Ajuda', icon: HelpCircle, roles: ['admin', 'manager', 'operator'] },
 ];
 
 const mobileItems = [
-  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager'] },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager'] },
+  { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager', 'operator'] },
   { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
   { href: '#refresh', label: 'Atualizar', icon: RefreshCw, roles: ['admin', 'manager', 'operator'] },
   { href: '#menu', label: 'Menu', icon: Menu, roles: ['admin', 'manager', 'operator'] }, 

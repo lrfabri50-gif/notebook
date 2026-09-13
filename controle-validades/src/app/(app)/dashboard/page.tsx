@@ -11,11 +11,6 @@ export default async function DashboardPage() {
   if (!session || !session.storeId) {
     redirect('/login');
   }
-
-  if (session.role === 'operator') {
-    redirect('/coletar');
-  }
-
   const storeId = session.storeId as string;
 
   const now = new Date();
@@ -217,7 +212,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* MIDDLE ROW: Charts */}
-      <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
+      <div className="hidden md:block">
+        <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
+      </div>
 
       {/* BOTTOM ROW: Actionable & Coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -277,7 +274,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Cobertura de Prevenção */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center justify-center text-center relative overflow-hidden h-[320px]">
+        <div className="hidden md:flex bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex-col items-center justify-center text-center relative overflow-hidden h-[320px]">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
           
           <h3 className="font-bold text-slate-800 text-base mb-1">Cobertura de Validades</h3>
