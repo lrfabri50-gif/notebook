@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { createCollection, getProductByBarcode } from './actions';
 import { useRouter } from 'next/navigation';
 
@@ -49,95 +49,65 @@ export default function ColetaPage() {
   }, [barcode]);
 
   useEffect(() => {
-    let html5QrCode: Html5Qrcode;
+    let codeReader: BrowserMultiFormatReader;
     let isMounted = true;
 
-    const initScanner = async () => {
-      html5QrCode = new Html5Qrcode("reader", {
-        verbose: false,
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.QR_CODE
-        ]
-      });
+    if (isScanning) {
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.QR_CODE
+      ]);
       
-      try {
-        let cameraConfig: any = { facingMode: "environment" };
-        
-        try {
-          const devices = await Html5Qrcode.getCameras();
-          if (devices && devices.length > 0) {
-            const backCameras = devices.filter(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('traseira') || c.label.toLowerCase().includes('environment'));
+      codeReader = new BrowserMultiFormatReader(hints, 500); // 500ms delay between decodes to save CPU
+
+      codeReader.listVideoInputDevices()
+        .then(videoInputDevices => {
+          if (!isMounted) return;
+
+          let selectedDeviceId = undefined;
+          
+          if (videoInputDevices.length > 0) {
+            const backCameras = videoInputDevices.filter(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('traseira') || c.label.toLowerCase().includes('environment'));
             if (backCameras.length > 0) {
-              // Pegar a câmera traseira principal
               const mainBack = backCameras.find(c => !c.label.toLowerCase().includes('ultra') && !c.label.toLowerCase().includes('0.5')) || backCameras[0];
-              // Passar o ID da câmera diretamente como string é o método mais seguro no iOS
-              cameraConfig = mainBack.id;
+              selectedDeviceId = mainBack.deviceId;
             }
           }
-        } catch (e) {
-          console.warn("Não foi possível listar as câmeras, usando config padrão.", e);
-        }
 
-        if (!isMounted || !isScanning) return;
-
-        try {
-          await html5QrCode.start(
-            cameraConfig,
-            { 
-              fps: 15, 
-              qrbox: { width: 280, height: 150 },
-              // Tenta usar a API nativa do celular (muito mais rápida)
-              experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true
+          // Inicia a câmera no elemento de vídeo
+          codeReader.decodeFromVideoDevice(
+            selectedDeviceId,
+            'scanner-video',
+            (result, err) => {
+              if (result && isMounted) {
+                setBarcode(result.getText());
+                stopScanner(codeReader);
               }
-            } as any,
-            (decodedText) => {
-              setBarcode(decodedText);
-              stopScanner(html5QrCode);
-            },
-            () => {} 
-          );
-        } catch (startError) {
-          console.warn("Falha com config preferida, tentando fallback...", startError);
-          // Fallback ultra-seguro caso o Safari bloqueie o ID específico
-          if (isMounted && isScanning) {
-            await html5QrCode.start(
-              { facingMode: "environment" },
-              { fps: 10, qrbox: { width: 280, height: 150 } },
-              (decodedText) => {
-                setBarcode(decodedText);
-                stopScanner(html5QrCode);
-              },
-              () => {}
-            );
-          }
-        }
-      } catch (err) {
-        console.error("Erro fatal ao iniciar câmera", err);
-      }
-    };
-
-    if (isScanning) {
-      initScanner();
+            }
+          ).catch(e => console.error("Falha ao iniciar camera ZXing", e));
+        })
+        .catch(err => {
+          console.error("Erro listando cameras", err);
+        });
     }
 
     return () => {
       isMounted = false;
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(console.error);
+      if (codeReader) {
+        codeReader.reset();
       }
     };
   }, [isScanning]);
 
-  const stopScanner = (scannerInstance?: Html5Qrcode) => {
+  const stopScanner = (readerInstance?: BrowserMultiFormatReader) => {
     setIsScanning(false);
-    if (scannerInstance && scannerInstance.isScanning) {
-      scannerInstance.stop().catch(console.error);
+    if (readerInstance) {
+      readerInstance.reset();
     }
   };
 
@@ -246,7 +216,7 @@ export default function ColetaPage() {
                   100% { top: 0%; }
                 }
               `}</style>
-              <div id="reader" className="flex-1 w-full bg-black relative"></div>
+              <video id="scanner-video" className="flex-1 w-full h-full object-cover bg-black relative" playsInline muted autoPlay></video>
               {/* Overlay Laser Animado */}
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
                 <div className="w-[280px] h-[150px] border-2 border-white/20 rounded-lg relative overflow-hidden">
