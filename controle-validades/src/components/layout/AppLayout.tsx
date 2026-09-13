@@ -36,7 +36,6 @@ const mobileItems = [
   { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager', 'operator'] },
   { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
-  { href: '#refresh', label: 'Atualizar', icon: RefreshCw, roles: ['admin', 'manager', 'operator'] },
   { href: '#menu', label: 'Menu', icon: Menu, roles: ['admin', 'manager', 'operator'] }, 
 ];
 
