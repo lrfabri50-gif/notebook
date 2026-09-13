@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Search, Plus, X, AlertCircle } from 'lucide-react';
 import { useZxing } from 'react-zxing';
-import { createCollection, getProductByBarcode } from './actions';
+import { createCollection, getProductsByBarcode } from './actions';
 import { useRouter } from 'next/navigation';
 
 function BarcodeScanner({ onResult, onClose }: { onResult: (text: string) => void, onClose: () => void }) {
@@ -66,7 +66,8 @@ export default function ColetaPage() {
   const [showNotFoundModal, setShowNotFoundModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
-  const [productInfo, setProductInfo] = useState<{ description: string, department: string } | null>(null);
+  const [products, setProducts] = useState<{ id: string, description: string, department: string, barcode: string }[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>('');
   
   const router = useRouter();
 
@@ -74,17 +75,24 @@ export default function ColetaPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       if (barcode.length < 3) {
-        setProductInfo(null);
+        setProducts([]);
+        setSelectedProductId('');
         return;
       }
       setIsSearchingProduct(true);
       try {
-        const product = await getProductByBarcode(barcode);
-        if (product) {
-          setProductInfo(product);
+        const foundProducts = await getProductsByBarcode(barcode);
+        if (foundProducts && foundProducts.length > 0) {
+          setProducts(foundProducts);
+          if (foundProducts.length === 1) {
+            setSelectedProductId(foundProducts[0].id);
+          } else {
+            setSelectedProductId('');
+          }
           setShowNotFoundModal(false);
         } else {
-          setProductInfo(null);
+          setProducts([]);
+          setSelectedProductId('');
         }
       } catch (err) {
         console.error("Error looking up product", err);
@@ -105,13 +113,18 @@ export default function ColetaPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcode) return;
-    if (!productInfo) {
+    if (products.length === 0) {
       setShowNotFoundModal(true);
+      return;
+    }
+    if (!selectedProductId) {
+      alert('Por favor, selecione qual produto deseja coletar.');
       return;
     }
     
     setLoading(true);
     const formData = new FormData();
+    formData.append('productId', selectedProductId);
     formData.append('barcode', barcode);
     formData.append('expirationDate', expiration);
     formData.append('quantity', quantity);
@@ -129,7 +142,8 @@ export default function ColetaPage() {
     if (res?.success) {
       alert(`Coleta salva com sucesso!`);
       setBarcode('');
-      setProductInfo(null);
+      setProducts([]);
+      setSelectedProductId('');
       setExpiration('');
       setQuantity('1');
       setBatch('');
@@ -155,13 +169,33 @@ export default function ColetaPage() {
               {isSearchingProduct && (
                 <div className="absolute top-[110%] left-0 text-xs text-primary font-medium">Buscando...</div>
               )}
-              {!isSearchingProduct && productInfo && (
-                <div className="absolute top-[110%] left-0 text-xs text-slate-600 truncate max-w-full">
-                  <span className="font-bold text-slate-800">{productInfo.description}</span>
-                  {productInfo.department && <span className="ml-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px]">{productInfo.department}</span>}
+              {!isSearchingProduct && products.length === 1 && (
+                <div className="absolute top-[110%] left-0 text-xs text-slate-600 truncate max-w-full bg-white px-2 py-1 shadow rounded border border-slate-100 z-50">
+                  <span className="font-bold text-slate-800">{products[0].description}</span>
+                  {products[0].department && <span className="ml-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px]">{products[0].department}</span>}
                 </div>
               )}
-              {!isSearchingProduct && !productInfo && barcode.length >= 3 && (
+              {!isSearchingProduct && products.length > 1 && (
+                <div className="absolute top-[110%] left-0 z-50 w-[300px] bg-white border border-slate-200 shadow-xl rounded-lg p-2 flex flex-col gap-1 max-h-48 overflow-y-auto">
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 px-1">Selecione o produto:</div>
+                  {products.map(p => (
+                    <label key={p.id} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedProductId === p.id ? 'bg-primary/10 border-primary/30 border' : 'hover:bg-slate-50 border border-transparent'}`}>
+                      <input 
+                        type="radio" 
+                        name="product_desktop"
+                        checked={selectedProductId === p.id} 
+                        onChange={() => setSelectedProductId(p.id)}
+                        className="text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-slate-800 truncate">{p.description}</div>
+                        {p.department && <div className="text-[10px] text-slate-500">{p.department}</div>}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {!isSearchingProduct && products.length === 0 && barcode.length >= 3 && (
                 <div className="absolute top-[110%] left-0 text-xs flex items-center gap-2">
                   <span className="text-red-500 font-medium">Produto não encontrado.</span>
                   <button 
@@ -231,11 +265,30 @@ export default function ColetaPage() {
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center min-h-[60px] text-center">
                   {isSearchingProduct ? (
                     <span className="text-sm font-medium text-slate-500 animate-pulse">Buscando produto...</span>
-                  ) : productInfo ? (
+                  ) : products.length === 1 ? (
                     <>
-                      <span className="font-bold text-slate-800 leading-tight">{productInfo.description}</span>
-                      {productInfo.department && <span className="text-xs text-slate-500 mt-0.5">{productInfo.department}</span>}
+                      <span className="font-bold text-slate-800 leading-tight">{products[0].description}</span>
+                      {products[0].department && <span className="text-xs text-slate-500 mt-0.5">{products[0].department}</span>}
                     </>
+                  ) : products.length > 1 ? (
+                    <div className="w-full text-left flex flex-col gap-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Selecione o produto:</span>
+                      {products.map(p => (
+                        <label key={p.id} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${selectedProductId === p.id ? 'bg-primary/5 border-primary shadow-sm' : 'bg-white border-slate-200'}`}>
+                          <input 
+                            type="radio" 
+                            name="product_mobile"
+                            checked={selectedProductId === p.id} 
+                            onChange={() => setSelectedProductId(p.id)}
+                            className="text-primary focus:ring-primary h-5 w-5 flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold text-slate-800 leading-tight truncate">{p.description}</div>
+                            {p.department && <div className="text-xs text-slate-500 truncate">{p.department}</div>}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center gap-1">
                       <span className="text-sm font-medium text-red-500">Produto não encontrado</span>

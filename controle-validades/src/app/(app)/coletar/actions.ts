@@ -11,18 +11,18 @@ export async function createCollection(formData: FormData) {
   const storeId = session.storeId as string;
   const userId = session.id as string;
 
-  const barcode = formData.get('barcode') as string;
+  const productId = formData.get('productId') as string;
   const expirationStr = formData.get('expirationDate') as string;
   const quantity = parseInt(formData.get('quantity') as string, 10);
   const batch = formData.get('batch') as string;
   const shelfLocation = formData.get('shelfLocation') as string;
 
-  if (!barcode || !expirationStr) return { error: 'Campos obrigatórios faltando.' };
+  if (!productId || !expirationStr) return { error: 'Campos obrigatórios faltando.' };
 
-  // 1. Find product by barcode and storeId
+  // 1. Find product by ID and storeId
   const product = await prisma.product.findFirst({
     where: { 
-      barcode,
+      id: productId,
       storeId 
     }
   });
@@ -52,11 +52,11 @@ export async function createCollection(formData: FormData) {
   return { success: true };
 }
 
-export async function getProductByBarcode(barcode: string) {
+export async function getProductsByBarcode(barcode: string) {
   const session = await getSession();
-  if (!session?.storeId) return null;
+  if (!session?.storeId) return [];
 
-  const product = await prisma.product.findFirst({
+  const products = await prisma.product.findMany({
     where: { 
       barcode,
       storeId: session.storeId as string
@@ -64,10 +64,10 @@ export async function getProductByBarcode(barcode: string) {
     include: { department: true }
   });
 
-  if (!product) return null;
-
-  return {
+  return products.map(product => ({
+    id: product.id,
     description: product.description,
-    department: product.department?.name || ''
-  };
+    department: product.department?.name || '',
+    barcode: product.barcode
+  }));
 }

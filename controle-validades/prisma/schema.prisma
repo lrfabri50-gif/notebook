@@ -78,7 +78,7 @@ model Product {
   createdAt    DateTime?    @default(now()) 
   collections  Collection[]
 
-  @@unique([storeId, barcode])
+  @@index([storeId, barcode])
   @@map("products")
 }
 

@@ -96,24 +96,30 @@ export async function POST(request: Request) {
         }
       }
 
-      await prisma.product.upsert({
+      const existingProducts = await prisma.product.findMany({
         where: {
-          storeId_barcode: {
-            storeId: storeId,
-            barcode: barcode
-          }
-        },
-        update: {
-          description: description,
-          departmentId: departmentId
-        },
-        create: {
           storeId: storeId,
-          barcode: barcode,
-          description: description,
-          departmentId: departmentId
+          barcode: barcode
         }
       });
+
+      const exactMatch = existingProducts.find(p => p.description === description);
+
+      if (exactMatch) {
+        await prisma.product.update({
+          where: { id: exactMatch.id },
+          data: { departmentId: departmentId }
+        });
+      } else {
+        await prisma.product.create({
+          data: {
+            storeId: storeId,
+            barcode: barcode,
+            description: description,
+            departmentId: departmentId
+          }
+        });
+      }
       
       successCount++;
     }
