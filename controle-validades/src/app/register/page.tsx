@@ -31,7 +31,7 @@ export default function RegisterPage() {
       if (response.ok) {
         setSuccess(true);
         setTimeout(() => {
-          router.push('/login');
+          router.push('/login?new=1');
         }, 3000);
       } else {
         setError(data.error || 'Erro ao registrar');

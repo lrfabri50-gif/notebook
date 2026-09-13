@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { LogIn, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isNew = searchParams.get('new');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +31,11 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/dashboard');
+        if (isNew) {
+          router.push('/meu-plano');
+        } else {
+          router.push('/dashboard');
+        }
         router.refresh();
       } else {
         setError(data.error || 'Erro ao realizar login');
@@ -143,5 +150,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Carregando...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

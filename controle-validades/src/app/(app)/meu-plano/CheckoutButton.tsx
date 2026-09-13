@@ -4,9 +4,24 @@ import React, { useState } from 'react';
 import { simulatePayment } from './actions';
 import { CreditCard, QrCode, CheckCircle2 } from 'lucide-react';
 
-export default function CheckoutButton({ planType, price, maxUsers }: { planType: 'basico' | 'equipe', price: string, maxUsers: number }) {
+export default function CheckoutButton({ 
+  planType, 
+  price, 
+  maxUsers, 
+  isActive, 
+  currentPlanName 
+}: { 
+  planType: 'basico' | 'equipe', 
+  price: string, 
+  maxUsers: number,
+  isActive?: boolean,
+  currentPlanName?: string
+}) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const planNameParsed = planType === 'basico' ? 'Básico' : 'Equipe';
+  const isCurrentPlan = isActive && currentPlanName === planNameParsed;
 
   const handleSimulate = async () => {
     setLoading(true);
@@ -20,10 +35,10 @@ export default function CheckoutButton({ planType, price, maxUsers }: { planType
     }
   };
 
-  if (success) {
+  if (success || isCurrentPlan) {
     return (
       <div className="bg-green-50 text-green-700 p-4 rounded-xl flex items-center justify-center gap-2 font-bold mt-4 border border-green-200">
-        <CheckCircle2 className="w-5 h-5" /> Assinatura Ativa!
+        <CheckCircle2 className="w-5 h-5" /> Seu Plano Atual
       </div>
     );
   }

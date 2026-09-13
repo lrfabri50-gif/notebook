@@ -97,7 +97,13 @@ export default async function MeuPlanoPage() {
             </li>
           </ul>
 
-          <CheckoutButton planType="basico" price="24,90" maxUsers={1} />
+          <CheckoutButton 
+            planType="basico" 
+            price="24,90" 
+            maxUsers={1} 
+            isActive={isActive} 
+            currentPlanName={subscription?.planName || ''} 
+          />
         </div>
 
         {/* EQUIPE (Destaque) */}
@@ -135,7 +141,13 @@ export default async function MeuPlanoPage() {
           </ul>
 
           <div className="bg-white/10 p-1 rounded-xl">
-            <CheckoutButton planType="equipe" price="79,60" maxUsers={4} />
+            <CheckoutButton 
+              planType="equipe" 
+              price="79,60" 
+              maxUsers={4} 
+              isActive={isActive} 
+              currentPlanName={subscription?.planName || ''} 
+            />
           </div>
         </div>
 
