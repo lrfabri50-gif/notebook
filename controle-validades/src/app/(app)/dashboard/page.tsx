@@ -237,7 +237,12 @@ export default async function DashboardPage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {imediateActions.map((col: any) => {
-                  const daysLeft = Math.ceil((col.expirationDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+                  const expDate = new Date(col.expirationDate);
+                  expDate.setUTCHours(0, 0, 0, 0);
+                  const today = new Date();
+                  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                  const daysLeft = Math.ceil((expDate.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
+                  
                   return (
                     <div key={col.id} className="py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-lg px-2 -mx-2">
                       <div className="flex items-start gap-2.5">

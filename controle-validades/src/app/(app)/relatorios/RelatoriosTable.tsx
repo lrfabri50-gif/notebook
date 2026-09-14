@@ -66,7 +66,7 @@ export default function RelatoriosTable({ initialData }: RelatoriosTableProps) {
                 return (
                   <tr key={row.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${colorClass}`}>
+                      <span className={`whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-bold ${colorClass}`}>
                         {row.statusLabel}
                       </span>
                     </td>
