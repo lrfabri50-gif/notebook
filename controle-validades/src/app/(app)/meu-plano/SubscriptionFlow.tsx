@@ -13,7 +13,7 @@ interface Props {
 
 export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, adminEmail }: Props) {
   // Configurações de Preço
-  const BASE_PRICE = 19.90;
+  const BASE_PRICE = 23.90;
   const EXTRA_USER_PRICE = 5.90;
 
   // Estado
@@ -211,7 +211,12 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
           {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
           Assinar
         </button>
-        <p className="text-center text-xs text-slate-400 pt-2">Simulação de pagamento. Ativação imediata.</p>
+        
+        <div className="text-center space-y-1 pt-2">
+          <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-full inline-block">
+            ✨ Avisos por WhatsApp inclusos 100% grátis
+          </p>
+        </div>
       </form>
 
     </div>
