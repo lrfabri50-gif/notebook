@@ -127,14 +127,14 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
             <label 
               className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 billingCycle === 'mensal' 
-                  ? 'border-orange-400 bg-orange-50/30' 
+                  ? 'border-emerald-500 bg-emerald-50/30' 
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
               onClick={() => setBillingCycle('mensal')}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${billingCycle === 'mensal' ? 'border-orange-500' : 'border-slate-300'}`}>
-                  {billingCycle === 'mensal' && <div className="w-2.5 h-2.5 bg-orange-500 rounded-full" />}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${billingCycle === 'mensal' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                  {billingCycle === 'mensal' && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
                 </div>
                 <span className="text-slate-600 font-medium">Assinatura Mensal</span>
               </div>
@@ -145,14 +145,14 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
             <label 
               className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 billingCycle === 'anual' 
-                  ? 'border-orange-400 bg-orange-50/30' 
+                  ? 'border-emerald-500 bg-emerald-50/30' 
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
               onClick={() => setBillingCycle('anual')}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${billingCycle === 'anual' ? 'border-orange-500' : 'border-slate-300'}`}>
-                  {billingCycle === 'anual' && <div className="w-2.5 h-2.5 bg-orange-500 rounded-full" />}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${billingCycle === 'anual' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                  {billingCycle === 'anual' && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
                 </div>
                 <div>
                   <span className="text-slate-600 font-medium block">Assinatura Anual</span>
@@ -176,7 +176,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
               required
               value={formData.document}
               onChange={e => setFormData({...formData, document: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 text-slate-700 bg-slate-50/50"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 bg-slate-50/50"
             />
             
             <input 
@@ -185,7 +185,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
               required
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 text-slate-700 bg-slate-50/50"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 bg-slate-50/50"
             />
             
             <div className="relative">
@@ -196,7 +196,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
                 required
                 value={formData.email}
                 onChange={e => setFormData({...formData, email: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 text-slate-700 bg-slate-50/50"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 bg-slate-50/50"
               />
             </div>
 
@@ -206,7 +206,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
         <button 
           type="submit"
           disabled={loading}
-          className="w-full bg-[#df8a48] hover:bg-[#c97839] text-white font-bold py-4 rounded-xl text-lg transition-colors shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition-colors shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
           Assinar
