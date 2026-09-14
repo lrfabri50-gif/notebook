@@ -13,17 +13,21 @@ export default async function DashboardPage() {
   }
   const storeId = session.storeId as string;
 
-  const now = new Date();
+  // Normalize date to Brazilian timezone
+  const nowRaw = new Date();
+  const spDateString = nowRaw.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+  const spDate = new Date(spDateString);
+  const todayUTC = new Date(Date.UTC(spDate.getFullYear(), spDate.getMonth(), spDate.getDate()));
   
   // KPI dates
-  const next15Days = new Date();
-  next15Days.setDate(now.getDate() + 15);
+  const next15Days = new Date(todayUTC);
+  next15Days.setUTCDate(todayUTC.getUTCDate() + 15);
   
-  const next30Days = new Date();
-  next30Days.setDate(now.getDate() + 30);
+  const next30Days = new Date(todayUTC);
+  next30Days.setUTCDate(todayUTC.getUTCDate() + 30);
   
-  const last7Days = new Date();
-  last7Days.setDate(now.getDate() - 7);
+  const last7Days = new Date(todayUTC);
+  last7Days.setUTCDate(todayUTC.getUTCDate() - 7);
 
   const [
     totalCollections,
@@ -46,14 +50,14 @@ export default async function DashboardPage() {
     prisma.collection.count({
       where: {
         storeId,
-        expirationDate: { gt: now, lte: next15Days },
+        expirationDate: { gt: todayUTC, lte: next15Days },
         status: { not: 'collected' }
       }
     }),
     prisma.collection.count({
       where: {
         storeId,
-        expirationDate: { lte: now },
+        expirationDate: { lte: todayUTC },
         status: { not: 'collected' }
       }
     }),
@@ -67,7 +71,7 @@ export default async function DashboardPage() {
     prisma.collection.count({
       where: {
         storeId,
-        collectedAt: { gte: new Date(now.setHours(0, 0, 0, 0)) }
+        collectedAt: { gte: todayUTC }
       }
     }),
     prisma.product.count({ where: { storeId } }),
@@ -75,7 +79,7 @@ export default async function DashboardPage() {
       where: {
         storeId,
         status: { not: 'collected' },
-        expirationDate: { gt: now, lte: next15Days }
+        expirationDate: { gt: todayUTC, lte: next15Days }
       },
       include: { product: { include: { department: true } } },
       orderBy: { expirationDate: 'asc' },
@@ -94,17 +98,17 @@ export default async function DashboardPage() {
   // Build Evolution Data (Last 7 Days)
   const evolutionMap = new Map<string, { Insercoes: number, Perdas: number, topInsercoesList: string[], topPerdasList: string[] }>();
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(now.getDate() - i);
-    const dayStr = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+    const d = new Date(todayUTC);
+    d.setUTCDate(todayUTC.getUTCDate() - i);
+    const dayStr = d.toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' });
     evolutionMap.set(dayStr, { Insercoes: 0, Perdas: 0, topInsercoesList: [], topPerdasList: [] });
   }
 
   collectionsLast7Days.forEach(c => {
     if (!c.collectedAt) return;
-    const dayStr = c.collectedAt.toLocaleDateString('pt-BR', { weekday: 'short' });
+    const dayStr = c.collectedAt.toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'America/Sao_Paulo' });
     if (evolutionMap.has(dayStr)) {
-      const isLoss = c.expirationDate <= now;
+      const isLoss = c.expirationDate <= todayUTC;
       const data = evolutionMap.get(dayStr)!;
       const prodName = c.product?.description || 'Desconhecido';
       
@@ -134,7 +138,7 @@ export default async function DashboardPage() {
   const expiredCollections = await prisma.collection.findMany({
     where: { 
       storeId,
-      expirationDate: { lte: now } 
+      expirationDate: { lte: todayUTC } 
     },
     include: { product: true }
   });
@@ -237,10 +241,6 @@ export default async function DashboardPage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {imediateActions.map((col: any) => {
-                  const spDateString = now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
-                  const spDate = new Date(spDateString);
-                  const todayUTC = new Date(Date.UTC(spDate.getFullYear(), spDate.getMonth(), spDate.getDate()));
-                  
                   const expDate = new Date(col.expirationDate);
                   expDate.setUTCHours(0, 0, 0, 0);
                   
