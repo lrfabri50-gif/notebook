@@ -33,27 +33,29 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
     include: { product: { include: { department: true } } }
   });
 
-  const getStatusLabel = (date: Date) => {
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+  const getStatusLabel = (diffDays: number) => {
     if (diffDays <= 0) return 'Vencido';
-    if (diffDays <= 30) return `${diffDays} dias`;
-    return 'OK';
+    return `${diffDays} dias`;
   };
 
   // Prepara dados para exportação (PDF e CSV)
-  const exportData: ExportData[] = collections.map(c => ({
-    id: c.id,
-    statusLabel: getStatusLabel(c.expirationDate),
-    productDesc: c.product?.description || '---',
-    barcode: c.product?.barcode || '---',
-    department: c.product?.department?.name || '---',
-    expirationStr: c.expirationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
-    batch: c.batch || '-',
-    quantity: c.quantity,
-    priceChange: c.priceChange || undefined
-  }));
+  const exportData: ExportData[] = collections.map(c => {
+    const diffTime = c.expirationDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return {
+      id: c.id,
+      statusLabel: getStatusLabel(diffDays),
+      daysLeft: diffDays,
+      productDesc: c.product?.description || '---',
+      barcode: c.product?.barcode || '---',
+      department: c.product?.department?.name || '---',
+      expirationStr: c.expirationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
+      batch: c.batch || '-',
+      quantity: c.quantity,
+      priceChange: c.priceChange || undefined
+    };
+  });
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

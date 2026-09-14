@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 export type ExportData = {
   id: string;
   statusLabel: string;
+  daysLeft: number;
   productDesc: string;
   barcode: string;
   department: string;

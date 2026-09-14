@@ -57,9 +57,9 @@ export default function RelatoriosTable({ initialData }: RelatoriosTableProps) {
               )}
               {data.map(row => {
                 let colorClass = 'bg-green-100 text-green-700';
-                if (row.statusLabel === 'Vencido') {
+                if (row.daysLeft <= 0) {
                   colorClass = 'bg-red-100 text-red-700';
-                } else if (row.statusLabel !== 'OK') {
+                } else if (row.daysLeft <= 30) {
                   colorClass = 'bg-orange-100 text-orange-700';
                 }
 
