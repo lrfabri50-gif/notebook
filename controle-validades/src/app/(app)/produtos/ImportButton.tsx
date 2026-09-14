@@ -62,9 +62,9 @@ export default function ImportButton() {
               <X className="w-5 h-5" />
             </button>
             
-            <h3 className="text-xl font-bold text-slate-800 mb-2">Importar Produtos</h3>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Importar Produtos e Validades</h3>
             <p className="text-slate-500 text-sm mb-6">
-              Faça o upload de um arquivo CSV contendo Cód. de Barras, Descrição e Departamento.
+              Faça o upload de um arquivo CSV contendo Cód. de Barras, Descrição, Departamento, Validade (opcional) e Quantidade (opcional).
             </p>
 
             <form onSubmit={handleUpload} className="space-y-4">

@@ -67,6 +67,8 @@ export async function POST(request: Request) {
       const barcode = (parts[0] || '').trim().replace(/^"|"$/g, '');
       const description = (parts[1] || '').trim().replace(/^"|"$/g, '');
       const departmentName = (parts[2] || '').trim().replace(/^"|"$/g, '');
+      const expirationStr = (parts[3] || '').trim().replace(/^"|"$/g, '');
+      const quantityStr = (parts[4] || '').trim().replace(/^"|"$/g, '');
 
       if (!barcode || !description) continue;
 
@@ -105,13 +107,15 @@ export async function POST(request: Request) {
 
       const exactMatch = existingProducts.find(p => p.description === description);
 
+      let productId = exactMatch?.id;
+
       if (exactMatch) {
         await prisma.product.update({
           where: { id: exactMatch.id },
           data: { departmentId: departmentId }
         });
       } else {
-        await prisma.product.create({
+        const newProduct = await prisma.product.create({
           data: {
             storeId: storeId,
             barcode: barcode,
@@ -119,6 +123,33 @@ export async function POST(request: Request) {
             departmentId: departmentId
           }
         });
+        productId = newProduct.id;
+      }
+
+      // Handle Collection if Expiration Date is provided
+      if (productId && expirationStr) {
+        let expirationDate: Date | null = null;
+        if (expirationStr.includes('/')) {
+          const [day, month, year] = expirationStr.split('/');
+          if (day && month && year) {
+            expirationDate = new Date(`${year}-${month}-${day}T00:00:00`);
+          }
+        } else if (expirationStr.includes('-')) {
+          expirationDate = new Date(`${expirationStr}T00:00:00`);
+        }
+
+        if (expirationDate && !isNaN(expirationDate.getTime())) {
+          const qty = parseInt(quantityStr, 10) || 1;
+          await prisma.collection.create({
+            data: {
+              productId: productId,
+              storeId: storeId,
+              expirationDate: expirationDate,
+              quantity: qty,
+              status: 'pending'
+            }
+          });
+        }
       }
       
       successCount++;
