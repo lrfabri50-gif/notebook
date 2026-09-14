@@ -29,7 +29,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
   });
 
   const monthlyTotal = BASE_PRICE + (additionalUsers * EXTRA_USER_PRICE);
-  const annualTotal = monthlyTotal * 10; // Desconto: Paga 10, Leva 12 (~16.6% off)
+  const annualTotal = monthlyTotal * 11; // Desconto: Paga 11, Leva 12 (~8% off)
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +156,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
                 </div>
                 <div>
                   <span className="text-slate-600 font-medium block">Assinatura Anual</span>
-                  <span className="text-teal-600 text-xs font-bold">Desconto de 16% (2 meses off)</span>
+                  <span className="text-teal-600 text-xs font-bold">1 mês grátis (Pague 11)</span>
                 </div>
               </div>
               <span className="text-xl font-bold text-slate-900">R$ {annualTotal.toFixed(2).replace('.', ',')}</span>
