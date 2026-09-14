@@ -16,7 +16,15 @@ export async function getSubscriptionDetails() {
   return store?.subscription || null;
 }
 
-export async function simulatePayment(planType: 'basico' | 'equipe') {
+export async function processCheckout({
+  additionalUsers,
+  billingCycle,
+  amount
+}: {
+  additionalUsers: number;
+  billingCycle: 'mensal' | 'anual';
+  amount: number;
+}) {
   const session = await getSession();
   if (!session || session.role !== 'admin') {
     throw new Error('Não autorizado. Apenas administradores podem gerenciar o plano.');
@@ -30,10 +38,8 @@ export async function simulatePayment(planType: 'basico' | 'equipe') {
     throw new Error('Assinatura não encontrada.');
   }
 
-  const isBasico = planType === 'basico';
-  const planName = isBasico ? 'Básico' : 'Equipe';
-  const maxUsers = isBasico ? 1 : 4;
-  const price = isBasico ? 24.90 : 79.60;
+  const planName = `Plano Flexível (${billingCycle === 'anual' ? 'Anual' : 'Mensal'})`;
+  const maxUsers = 1 + additionalUsers;
 
   // Atualiza o banco
   await prisma.subscription.update({
@@ -42,7 +48,7 @@ export async function simulatePayment(planType: 'basico' | 'equipe') {
       status: 'active',
       planName: planName,
       maxUsers: maxUsers,
-      basePlanPrice: price,
+      basePlanPrice: amount,
       whatsappAddon: true,
       whatsappAddonPrice: 0 // Grátis
     }
@@ -52,8 +58,8 @@ export async function simulatePayment(planType: 'basico' | 'equipe') {
   await prisma.payment.create({
     data: {
       subscriptionId: store.subscriptionId,
-      amount: price,
-      paymentMethod: 'PIX (Simulado)',
+      amount: amount,
+      paymentMethod: 'Checkout (Simulado)',
       status: 'paid',
       paidAt: new Date()
     }
