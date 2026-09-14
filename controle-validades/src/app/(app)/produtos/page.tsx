@@ -4,6 +4,7 @@ import { createProduct, deleteProduct } from './actions';
 import { Trash2, Plus, Search } from 'lucide-react';
 import ImportButton from './ImportButton';
 import { getSession } from '@/lib/auth';
+import DepartmentSelect from './DepartmentSelect';
 import { redirect } from 'next/navigation';
 
 export default async function ProdutosPage(props: { searchParams?: Promise<{ barcode?: string, search?: string }> }) {
@@ -92,15 +93,7 @@ export default async function ProdutosPage(props: { searchParams?: Promise<{ bar
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Departamento</label>
-                <select 
-                  name="departmentId"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                >
-                  <option value="">-- Sem Departamento --</option>
-                  {departments.map(dept => (
-                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                  ))}
-                </select>
+                <DepartmentSelect initialDepartments={departments} />
               </div>
               <button 
                 type="submit" 

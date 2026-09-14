@@ -75,7 +75,7 @@ export default async function DashboardPage() {
       where: {
         storeId,
         status: { not: 'collected' },
-        expirationDate: { gt: now }
+        expirationDate: { gt: now, lte: next15Days }
       },
       include: { product: { include: { department: true } } },
       orderBy: { expirationDate: 'asc' },
