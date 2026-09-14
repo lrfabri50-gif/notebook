@@ -70,12 +70,13 @@ export default async function MeuPlanoPage() {
         {/* BÁSICO */}
         <div className="bg-white rounded-3xl p-8 border-2 border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden flex flex-col">
           <div className="mb-6">
-            <h3 className="text-2xl font-bold text-slate-800">Plano Básico</h3>
+            <h3 className="text-2xl font-bold text-slate-800">Plano Básico <span className="text-sm bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full ml-2 align-middle">Mensal</span></h3>
             <p className="text-slate-500 mt-2">Para lojas pequenas com foco em agilidade.</p>
           </div>
-          <div className="mb-8">
+          <div className="mb-6">
             <span className="text-4xl font-extrabold text-slate-900">R$ 24,90</span>
             <span className="text-slate-500 font-medium">/mês</span>
+            <span className="text-slate-400 text-sm block mt-1">Sem fidelidade.</span>
           </div>
 
           <ul className="space-y-4 mb-8 flex-1">
@@ -113,12 +114,14 @@ export default async function MeuPlanoPage() {
           </div>
           
           <div className="mb-6 mt-2">
-            <h3 className="text-2xl font-bold text-white">Plano Equipe</h3>
-            <p className="text-primary-foreground/80 mt-2">Para lojas que precisam delegar tarefas.</p>
+            <h3 className="text-2xl font-bold text-white">Plano Equipe <span className="text-sm bg-white/20 px-2 py-0.5 rounded-full ml-2 align-middle">Anual</span></h3>
+            <p className="text-primary-foreground/80 mt-2">Para lojas que precisam delegar tarefas e maximizar resultados.</p>
           </div>
-          <div className="mb-8">
-            <span className="text-4xl font-extrabold text-white">R$ 79,60</span>
-            <span className="text-primary-foreground/80 font-medium">/mês</span>
+          <div className="mb-6">
+            <span className="text-4xl font-extrabold text-white">12x R$ 79,60</span>
+            <span className="text-primary-foreground/80 font-medium block mt-1">
+              ou à vista com <strong>1 mês grátis</strong> (Pague 12, leve 13 meses!)
+            </span>
           </div>
 
           <ul className="space-y-4 mb-8 flex-1">
