@@ -237,10 +237,13 @@ export default async function DashboardPage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {imediateActions.map((col: any) => {
+                  const spDateString = now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+                  const spDate = new Date(spDateString);
+                  const todayUTC = new Date(Date.UTC(spDate.getFullYear(), spDate.getMonth(), spDate.getDate()));
+                  
                   const expDate = new Date(col.expirationDate);
                   expDate.setUTCHours(0, 0, 0, 0);
-                  const today = new Date();
-                  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                  
                   const daysLeft = Math.ceil((expDate.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
                   
                   return (

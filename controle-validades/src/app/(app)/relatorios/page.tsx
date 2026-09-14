@@ -40,7 +40,14 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
 
   // Prepara dados para exportação (PDF e CSV)
   const exportData: ExportData[] = collections.map(c => {
-    const diffTime = c.expirationDate.getTime() - now.getTime();
+    const spDateString = now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+    const spDate = new Date(spDateString);
+    const todayUTC = new Date(Date.UTC(spDate.getFullYear(), spDate.getMonth(), spDate.getDate()));
+
+    const expDate = new Date(c.expirationDate);
+    expDate.setUTCHours(0, 0, 0, 0);
+
+    const diffTime = expDate.getTime() - todayUTC.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     return {
