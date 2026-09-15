@@ -20,7 +20,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
   const [additionalUsers, setAdditionalUsers] = useState(maxUsers > 1 ? maxUsers - 1 : 0);
   const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>(currentPlanName.toLowerCase().includes('anual') ? 'anual' : 'mensal');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<'form' | 'payment' | 'success'>(isActive ? 'success' : 'form');
   
   const [formData, setFormData] = useState({
     document: '',
@@ -30,30 +30,34 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
 
   const monthlyTotal = BASE_PRICE + (additionalUsers * EXTRA_USER_PRICE);
   const annualTotal = monthlyTotal * 11; // Desconto: Paga 11, Leva 12 (~8% off)
+  const finalAmount = billingCycle === 'mensal' ? monthlyTotal : annualTotal;
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  const handleGoToPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.document || !formData.name || !formData.email) {
       alert('Por favor, preencha todos os dados.');
       return;
     }
+    setStep('payment');
+  };
 
+  const handleCheckout = async () => {
     setLoading(true);
     try {
-      const finalAmount = billingCycle === 'mensal' ? monthlyTotal : annualTotal;
       await processCheckout({
         additionalUsers,
         billingCycle,
         amount: finalAmount
       });
-      setSuccess(true);
+      setStep('success');
     } catch (err: any) {
       alert(err.message || 'Erro ao simular pagamento.');
+    } finally {
       setLoading(false);
     }
   };
 
-  if (success || isActive) {
+  if (step === 'success') {
     return (
       <div className="bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-8 text-center max-w-lg mx-auto mt-8">
         <ShieldCheck className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
@@ -73,6 +77,64 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
     );
   }
 
+  if (step === 'payment') {
+    return (
+      <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-12 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 mt-8">
+        <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between relative">
+          <button onClick={() => setStep('form')} className="text-slate-400 hover:text-slate-600 font-medium text-sm">
+            Voltar
+          </button>
+          <h2 className="text-xl font-medium text-slate-800">Pagamento</h2>
+          <div className="w-10"></div> {/* Spacer para centralizar o título */}
+        </div>
+        
+        <div className="p-6 space-y-6">
+          
+          <div className="bg-emerald-600 text-white rounded-2xl p-6 text-center shadow-lg shadow-emerald-600/20">
+            <p className="text-emerald-100 text-sm font-medium mb-1">Total a pagar</p>
+            <h3 className="text-4xl font-black mb-2">R$ {finalAmount.toFixed(2).replace('.', ',')}</h3>
+            <p className="text-emerald-200 text-xs">Plano {billingCycle === 'anual' ? 'Anual' : 'Mensal'} • {additionalUsers + 1} Usuário(s)</p>
+          </div>
+
+          <div>
+            <h3 className="text-slate-800 font-medium mb-3">Como você quer pagar?</h3>
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/30 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                  </div>
+                  <span className="text-slate-700 font-bold">PIX (Aprovação na hora)</span>
+                </div>
+              </div>
+              
+              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white opacity-50 cursor-not-allowed flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-300"></div>
+                  <span className="text-slate-500 font-medium">Cartão de Crédito (Em breve)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-blue-800 text-sm">
+            <p className="font-bold mb-1">Ambiente de Teste</p>
+            <p>Esta é uma simulação. Clique no botão abaixo para concluir o pagamento de mentirinha e ativar o plano.</p>
+          </div>
+
+          <button 
+            onClick={handleCheckout}
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition-colors shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            Confirmar Pagamento Simulado
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-12 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 mt-8">
       
@@ -81,7 +143,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
         <h2 className="text-xl font-medium text-slate-800">Assinatura do Plano</h2>
       </div>
 
-      <form onSubmit={handleCheckout} className="p-6 space-y-6">
+      <form onSubmit={handleGoToPayment} className="p-6 space-y-6">
         
         {/* SEU PLANO CARD */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
@@ -205,11 +267,9 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
 
         <button 
           type="submit"
-          disabled={loading}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition-colors shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-          Assinar
+          Continuar para Pagamento
         </button>
         
         <div className="text-center space-y-1 pt-2">
