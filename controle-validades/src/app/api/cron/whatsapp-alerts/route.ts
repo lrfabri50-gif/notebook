@@ -4,21 +4,25 @@ import { sendWhatsAppAlert } from '@/lib/whatsapp';
 
 export async function GET(req: Request) {
   try {
-    // 1. Determinar a data alvo (Ex: Daqui a 4 dias na hora de SP)
+    // 1. Determinar as datas alvo (Daqui a 3 e 4 dias na hora de SP)
     const nowRaw = new Date();
     const spDateString = nowRaw.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
     const spDate = new Date(spDateString);
     const todayUTC = new Date(Date.UTC(spDate.getFullYear(), spDate.getMonth(), spDate.getDate()));
     
-    const targetDate = new Date(todayUTC);
-    const diasAlvo = 4;
-    targetDate.setUTCDate(todayUTC.getUTCDate() + diasAlvo);
+    const targetDate3 = new Date(todayUTC);
+    targetDate3.setUTCDate(todayUTC.getUTCDate() + 3);
 
-    // 2. Buscar todas as coletas pendentes que vencem exatamente no targetDate
+    const targetDate4 = new Date(todayUTC);
+    targetDate4.setUTCDate(todayUTC.getUTCDate() + 4);
+
+    // 2. Buscar todas as coletas pendentes que vencem exatamente nestas datas
     // Também incluir informações do produto e da loja.
     const collections = await prisma.collection.findMany({
       where: {
-        expirationDate: targetDate,
+        expirationDate: {
+          in: [targetDate3, targetDate4]
+        },
         status: 'pending'
       },
       include: {
@@ -32,7 +36,7 @@ export async function GET(req: Request) {
     });
 
     if (collections.length === 0) {
-      return NextResponse.json({ message: 'Nenhum produto a vencer em 4 dias.' }, { status: 200 });
+      return NextResponse.json({ message: 'Nenhum produto a vencer em 3 ou 4 dias.' }, { status: 200 });
     }
 
     // 3. Agrupar as coletas por loja (storeId)
@@ -52,9 +56,8 @@ export async function GET(req: Request) {
       
       // Montar a mensagem dinâmica
       const qtdProdutos = storeCollections.length;
-      const dataFormatada = targetDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
       
-      const message = `🚨 *Alerta Artos - Controle de Validades* 🚨\n\nExistem *${qtdProdutos}* produto(s) na sua loja que vão vencer em *${diasAlvo} dias* (em ${dataFormatada})!\n\nAcesse o sistema para tomar a Ação Imediata.`;
+      const message = `🚨 *Alerta Artos - Controle de Validades* 🚨\n\nExistem *${qtdProdutos}* produto(s) na sua loja que vão vencer em *3 ou 4 dias*!\n\nAcesse o sistema para verificar e tomar a Ação Imediata.`;
 
       // Disparar para os usuários da loja que têm WhatsApp e são admin/operator
       for (const user of store.users) {
