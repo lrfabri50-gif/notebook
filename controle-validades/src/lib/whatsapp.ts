@@ -16,7 +16,12 @@ export async function sendWhatsAppAlert({
   const phoneId = process.env.WHATSAPP_PHONE_ID;
 
   // Limpar formatação do telefone (deixar só números)
-  const cleanPhone = recipientPhone.replace(/\D/g, '');
+  let cleanPhone = recipientPhone.replace(/\D/g, '');
+  
+  // Se tiver 10 ou 11 dígitos, provavelmente esqueceu o +55 (código do Brasil). A Meta exige o DDI.
+  if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+    cleanPhone = `55${cleanPhone}`;
+  }
 
   console.log(`[WHATSAPP META] Tentando envio para ${cleanPhone}...`);
 
