@@ -52,7 +52,7 @@ function LoginForm() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
         <div className="bg-primary p-8 text-center flex flex-col items-center">
           <div className="w-20 h-20 bg-white rounded-full p-2 shadow-sm flex items-center justify-center mb-4">
-            <img src="/logo-empresa.png" alt="Logo" className="w-full h-full object-contain" />
+            <img src="/logo-empresa.png?v=3" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-wide">Bem-vindo(a)</h1>
           <p className="text-white/80 text-sm mt-1">Gestão inteligente de validades</p>
