@@ -15,6 +15,7 @@ export type ExportData = {
   expirationStr: string;
   batch: string;
   quantity: number;
+  tagPrice?: string;
   priceChange?: string;
 };
 
@@ -22,7 +23,7 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
   const handleExportCSV = () => {
     // Cabeçalho do CSV (com BOM para acentuação UTF-8 no Excel)
     let csvContent = '\uFEFF'; 
-    csvContent += 'Status;Produto;Código;Departamento;Vencimento;Lote;Quantidade;Alteração de Preço\n';
+    csvContent += 'Status;Produto;Código;Departamento;Vencimento;Lote;Quantidade;Preço Etiqueta;Preço de Oferta\n';
 
     // Adiciona as linhas
     data.forEach(row => {
@@ -34,6 +35,7 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
         row.expirationStr,
         `"${row.batch}"`,
         row.quantity,
+        `"${row.tagPrice || ''}"`,
         `"${row.priceChange || ''}"` // Usando o preço alterado
       ].join(';');
       csvContent += line + '\n';
@@ -58,7 +60,7 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
     doc.setTextColor(100);
     doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
 
-    const tableColumn = ['Status', 'Produto', 'Código', 'Departamento', 'Venc.', 'Lote', 'Qtd', 'Alteração de Preço'];
+    const tableColumn = ['Status', 'Produto', 'Código', 'Departamento', 'Venc.', 'Lote', 'Qtd', 'Preço Etiqueta', 'Preço Oferta'];
     const tableRows = data.map(row => [
       row.statusLabel,
       row.productDesc,
@@ -67,7 +69,8 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
       row.expirationStr,
       row.batch,
       row.quantity,
-      row.priceChange || '' // Usando o preço alterado
+      row.tagPrice ? `R$ ${row.tagPrice}` : '-',
+      row.priceChange ? `R$ ${row.priceChange}` : '-'
     ]);
 
     autoTable(doc, {
@@ -94,8 +97,11 @@ export default function ExportButtons({ data }: { data: ExportData[] }) {
       message += `Status: ${row.statusLabel}\n`;
       message += `Vencimento: ${row.expirationStr}\n`;
       message += `Qtd: ${row.quantity}\n`;
+      if (row.tagPrice) {
+        message += `Preço Etiqueta: R$ ${row.tagPrice}\n`;
+      }
       if (row.priceChange) {
-        message += `*Novo Preço: R$ ${row.priceChange}*\n`;
+        message += `*Novo Preço Oferta: R$ ${row.priceChange}*\n`;
       }
       message += `-----------------\n`;
     });

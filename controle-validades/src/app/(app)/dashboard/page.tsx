@@ -18,9 +18,11 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
-function parseItemPrice(priceChange: string | null | undefined): number {
-  if (!priceChange) return 12.50; // Valor médio estimado caso não tenha preço cadastrado
-  const clean = priceChange.replace('R$', '').trim().replace(/\./g, '').replace(',', '.');
+function parseItemPrice(tagPrice: string | null | undefined, priceChange?: string | null | undefined): number {
+  // O Preço da Etiqueta fixado pelo auxiliar tem prioridade (valor da gôndola), seguido de priceChange
+  const priceToUse = tagPrice || priceChange;
+  if (!priceToUse) return 12.50; // Estimativa de segurança apenas se nenhum preço de etiqueta foi informado
+  const clean = priceToUse.replace('R$', '').trim().replace(/\./g, '').replace(',', '.');
   const parsed = parseFloat(clean);
   return isNaN(parsed) || parsed <= 0 ? 12.50 : parsed;
 }
@@ -134,7 +136,7 @@ export default async function DashboardPage() {
     expDate.setUTCHours(0, 0, 0, 0);
     const daysLeft = Math.ceil((expDate.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
     
-    const unitPrice = parseItemPrice(c.priceChange);
+    const unitPrice = parseItemPrice(c.tagPrice, c.priceChange);
     const itemTotalRisk = c.quantity * unitPrice;
     totalItensAtivos += c.quantity;
 
@@ -149,6 +151,7 @@ export default async function DashboardPage() {
       quantity: c.quantity,
       expirationFormatted: expDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
       priceChange: c.priceChange,
+      tagPrice: c.tagPrice,
       estimatedRisk: itemTotalRisk
     };
 
@@ -196,7 +199,7 @@ export default async function DashboardPage() {
         if (days <= 15) {
           criticalCount += 1;
           criticalQty += col.quantity;
-          financialRisk += col.quantity * parseItemPrice(col.priceChange);
+          financialRisk += col.quantity * parseItemPrice(col.tagPrice, col.priceChange);
         }
       });
     });

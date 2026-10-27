@@ -44,13 +44,14 @@ export default function RelatoriosTable({ initialData }: RelatoriosTableProps) {
                 <th className="px-6 py-4">Vencimento</th>
                 <th className="px-6 py-4">Lote</th>
                 <th className="px-6 py-4">Qtde</th>
-                <th className="px-6 py-4 min-w-[150px]">Alteração de Preço</th>
+                <th className="px-6 py-4">Preço Etiqueta</th>
+                <th className="px-6 py-4 min-w-[150px]">Preço de Oferta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {data.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
                     Nenhuma coleta encontrada para este filtro.
                   </td>
                 </tr>
@@ -85,6 +86,9 @@ export default function RelatoriosTable({ initialData }: RelatoriosTableProps) {
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-800">
                       {row.quantity}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-700">
+                      {row.tagPrice ? `R$ ${row.tagPrice}` : <span className="text-slate-400 font-normal">-</span>}
                     </td>
                     <td className="px-6 py-4">
                       <div className="relative">
