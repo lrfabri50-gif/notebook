@@ -324,7 +324,7 @@ export default async function DashboardPage() {
       {/* 4 CARDS FINANCEIROS & MÉTRICAS EXECUTIVAS ARTOS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* Card 1: R$ em Risco Imediato */}
+        {/* Card 1: Valor de Perdas - Preço de Venda Atual */}
         <Link 
           href="/relatorios?filter=expired" 
           className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-rose-300 transition-all group flex flex-col justify-between relative overflow-hidden"
@@ -332,7 +332,7 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                Risco Imediato (Perda)
+                Valor de Perdas - Preço de Venda Atual
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">
                 R$ {valorRiscoImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -344,15 +344,15 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500 font-medium">
-              <strong className="text-rose-700 font-black">{expiredOrTodayList.length}</strong> itens críticos
+              <strong className="text-rose-700 font-black">{expiredOrTodayList.length}</strong> itens já vencidos
             </span>
             <span className="text-[11px] text-rose-700 font-bold group-hover:underline flex items-center gap-0.5">
-              Resolver <ArrowRight className="w-3 h-3" />
+              Ver Vencidos <ArrowRight className="w-3 h-3" />
             </span>
           </div>
         </Link>
 
-        {/* Card 2: R$ em Potencial de Recuperação */}
+        {/* Card 2: R$ em Risco a Recuperar */}
         <Link 
           href="/relatorios?filter=expiring_15" 
           className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-amber-300 transition-all group flex flex-col justify-between relative overflow-hidden"
@@ -360,7 +360,7 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                Potencial de Recuperação
+                Risco a Recuperar (Até 15 dias)
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-amber-700 tracking-tight">
                 R$ {valorRiscoRecuperavel.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -372,7 +372,7 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500 font-medium">
-              <strong className="text-amber-800 font-black">{threeDaysList.length + fourToSevenDaysList.length + eightToFifteenDaysList.length}</strong> itens em até 15 dias
+              <strong className="text-amber-800 font-black">{threeDaysList.length + fourToSevenDaysList.length + eightToFifteenDaysList.length}</strong> itens para queima
             </span>
             <span className="text-[11px] text-amber-800 font-bold group-hover:underline flex items-center gap-0.5">
               Criar Oferta <ArrowRight className="w-3 h-3" />
