@@ -60,7 +60,7 @@ export default async function RelatoriosPage(props: { searchParams?: Promise<{ f
       expirationStr: c.expirationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
       batch: c.batch || '-',
       quantity: c.quantity,
-      tagPrice: c.tagPrice || undefined,
+      tagPrice: (c as any).tagPrice || undefined,
       priceChange: c.priceChange || undefined
     };
   });
