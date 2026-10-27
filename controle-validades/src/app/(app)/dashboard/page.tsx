@@ -172,15 +172,6 @@ export default async function DashboardPage() {
     }
   });
 
-  // Índice de Blindagem da Loja (%)
-  // Ponderação entre cobertura de cadastro e produtos com validade sadia
-  const totalCriticos = expiredOrTodayList.length + threeDaysList.length;
-  const taxaValidadeSegura = totalItensAtivos > 0 
-    ? Math.max(0, Math.round(((totalItensAtivos - totalCriticos) / totalItensAtivos) * 100))
-    : 100;
-  const blindagemScore = totalProdutos > 0 
-    ? Math.round((coveragePercent * 0.4) + (taxaValidadeSegura * 0.6))
-    : 100;
 
   // Processamento do Raio-X por Departamentos
   const departmentHealthData: DepartmentHealth[] = departmentsRaw.map(dept => {
@@ -417,21 +408,21 @@ export default async function DashboardPage() {
           </div>
         </Link>
 
-        {/* Card 4: Índice de Blindagem da Loja */}
+        {/* Card 4: Auditoria e Cobertura da Loja */}
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[12px] font-bold uppercase tracking-wider text-slate-800 block leading-tight">
-                Índice de Blindagem
+                Auditoria da Loja
               </span>
               <span className="text-[10px] font-semibold text-slate-400 block tracking-wide uppercase mt-0.5 mb-1.5">
-                Segurança da Loja
+                Cobertura de Validades
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {blindagemScore}%
+                {coveragePercent}%
               </h3>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-100 flex items-center justify-center">
               <Target className="w-5 h-5 text-emerald-700" />
             </div>
           </div>
@@ -440,7 +431,7 @@ export default async function DashboardPage() {
             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
               <div 
                 className="bg-emerald-600 h-full rounded-full transition-all duration-1000"
-                style={{ width: `${blindagemScore}%` }}
+                style={{ width: `${coveragePercent}%` }}
               />
             </div>
             <div className="flex justify-between items-center text-[11px] text-slate-500">
