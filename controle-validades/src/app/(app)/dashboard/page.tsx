@@ -244,38 +244,40 @@ export default async function DashboardPage() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
 
-      {/* TOP HEADER EXECUTIVO ARTOS */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      {/* TOP HEADER EXECUTIVO ARTOS - SLIM COMPACT */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl px-5 py-3.5 sm:px-6 text-white shadow-md relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-emerald-500/5 blur-3xl pointer-events-none" />
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              Painel de Gestão e Blindagem de Validades
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              {storeData?.name || 'Visão Executiva da Loja'}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Monitoramento financeiro e preventivo em tempo real. Identifique riscos antes que se tornem perdas de caixa.
-            </p>
+            <div className="min-w-0 flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+              <h1 className="text-base font-black tracking-tight text-white whitespace-nowrap">
+                {storeData?.name || 'Loja Matriz'}
+              </h1>
+              <span className="text-emerald-400/80 font-bold hidden sm:inline">—</span>
+              <p className="text-xs text-slate-300">
+                Monitoramento financeiro e preventivo em tempo real. Identifique riscos antes que se tornem perdas de caixa.
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/coletar"
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.02] text-sm"
+              className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl shadow-md transition-all text-xs"
             >
-              <CalendarCheck2 className="w-4 h-4" /> Nova Coleta
+              <CalendarCheck2 className="w-3.5 h-3.5" /> Nova Coleta
             </Link>
             <Link
               href="/relatorios"
-              className="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-700 px-4 py-2.5 rounded-xl transition-all text-sm font-semibold"
+              className="inline-flex items-center gap-1.5 bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-700 px-3.5 py-2 rounded-xl transition-all text-xs font-semibold"
             >
-              Relatório Completo <ArrowRight className="w-4 h-4" />
+              Relatório Completo <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
