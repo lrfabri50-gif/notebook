@@ -1,10 +1,29 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { CalendarClock, ShieldCheck, ArrowRight, BadgePercent, AlarmClock, Ban, ClipboardCheck } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  ArrowRight, 
+  Coins, 
+  TrendingDown, 
+  AlertTriangle, 
+  Target,
+  Smartphone,
+  CheckCircle2,
+  CalendarCheck2
+} from 'lucide-react';
 import DashboardCharts from './DashboardCharts';
+import DepartmentHealthCards, { DepartmentHealth } from './DepartmentHealthCards';
+import TimelineDecisionMatrix, { TimelineItem } from './TimelineDecisionMatrix';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+
+function parseItemPrice(priceChange: string | null | undefined): number {
+  if (!priceChange) return 12.50; // Valor médio estimado caso não tenha preço cadastrado
+  const clean = priceChange.replace('R$', '').trim().replace(/\./g, '').replace(',', '.');
+  const parsed = parseFloat(clean);
+  return isNaN(parsed) || parsed <= 0 ? 12.50 : parsed;
+}
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -13,13 +32,19 @@ export default async function DashboardPage() {
   }
   const storeId = session.storeId as string;
 
-  // Normalize date to Brazilian timezone
+  // Normalizar data para o fuso horário de Brasília
   const nowRaw = new Date();
   const spDateString = nowRaw.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
   const spDate = new Date(spDateString);
   const todayUTC = new Date(Date.UTC(spDate.getFullYear(), spDate.getMonth(), spDate.getDate()));
   
-  // KPI dates
+  // Datas de corte
+  const next3Days = new Date(todayUTC);
+  next3Days.setUTCDate(todayUTC.getUTCDate() + 3);
+
+  const next7Days = new Date(todayUTC);
+  next7Days.setUTCDate(todayUTC.getUTCDate() + 7);
+
   const next15Days = new Date(todayUTC);
   next15Days.setUTCDate(todayUTC.getUTCDate() + 15);
   
@@ -29,37 +54,27 @@ export default async function DashboardPage() {
   const last7Days = new Date(todayUTC);
   last7Days.setUTCDate(todayUTC.getUTCDate() - 7);
 
+  // Consultas principais
   const [
-    totalCollections,
-    ofertaGreen, // > 15 days
-    expiringYellow, // <= 15 days, > 0 days
-    expiredRed, // <= 0 days
+    totalProdutos,
+    activeCollections,
     collectionsLast7Days,
     coletasHoje,
-    totalProdutos,
-    imediateActions // Top 5
+    departmentsRaw,
+    storeData
   ] = await Promise.all([
-    prisma.collection.count({ where: { storeId } }),
-    prisma.collection.count({
+    prisma.product.count({ where: { storeId } }),
+    prisma.collection.findMany({
       where: {
         storeId,
-        expirationDate: { gt: next15Days, lte: next30Days },
         status: { not: 'collected' }
-      }
-    }),
-    prisma.collection.count({
-      where: {
-        storeId,
-        expirationDate: { gt: todayUTC, lte: next15Days },
-        status: { not: 'collected' }
-      }
-    }),
-    prisma.collection.count({
-      where: {
-        storeId,
-        expirationDate: { lte: todayUTC },
-        status: { not: 'collected' }
-      }
+      },
+      include: {
+        product: {
+          include: { department: true }
+        }
+      },
+      orderBy: { expirationDate: 'asc' }
     }),
     prisma.collection.findMany({
       where: { 
@@ -74,16 +89,24 @@ export default async function DashboardPage() {
         collectedAt: { gte: todayUTC }
       }
     }),
-    prisma.product.count({ where: { storeId } }),
-    prisma.collection.findMany({
-      where: {
-        storeId,
-        status: { not: 'collected' },
-        expirationDate: { gt: todayUTC, lte: next15Days }
-      },
-      include: { product: { include: { department: true } } },
-      orderBy: { expirationDate: 'asc' },
-      take: 5
+    prisma.department.findMany({
+      where: { storeId },
+      include: {
+        products: {
+          include: {
+            collections: {
+              where: {
+                storeId,
+                status: { not: 'collected' }
+              }
+            }
+          }
+        }
+      }
+    }),
+    prisma.store.findUnique({
+      where: { id: storeId },
+      select: { name: true }
     })
   ]);
 
@@ -95,7 +118,105 @@ export default async function DashboardPage() {
   const coveredProductsCount = coveredProductsResult.length;
   const coveragePercent = totalProdutos > 0 ? Math.round((coveredProductsCount / totalProdutos) * 100) : 0;
 
-  // Build Evolution Data (Last 7 Days)
+  // Separação em Buckets da Matriz de Decisão e Cálculos Financeiros
+  const expiredOrTodayList: TimelineItem[] = [];
+  const threeDaysList: TimelineItem[] = [];
+  const fourToSevenDaysList: TimelineItem[] = [];
+  const eightToFifteenDaysList: TimelineItem[] = [];
+
+  let valorRiscoImediato = 0;
+  let valorRiscoRecuperavel = 0;
+  let valorMonitorado = 0;
+  let totalItensAtivos = 0;
+
+  activeCollections.forEach(c => {
+    const expDate = new Date(c.expirationDate);
+    expDate.setUTCHours(0, 0, 0, 0);
+    const daysLeft = Math.ceil((expDate.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
+    
+    const unitPrice = parseItemPrice(c.priceChange);
+    const itemTotalRisk = c.quantity * unitPrice;
+    totalItensAtivos += c.quantity;
+
+    const timelineItem: TimelineItem = {
+      id: c.id,
+      daysLeft,
+      productDescription: c.product?.description || 'Produto sem descrição',
+      barcode: c.product?.barcode || 'S/N',
+      departmentName: c.product?.department?.name || 'Geral',
+      shelfLocation: c.shelfLocation,
+      batch: c.batch,
+      quantity: c.quantity,
+      expirationFormatted: expDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
+      priceChange: c.priceChange,
+      estimatedRisk: itemTotalRisk
+    };
+
+    if (daysLeft <= 0) {
+      expiredOrTodayList.push(timelineItem);
+      valorRiscoImediato += itemTotalRisk;
+    } else if (daysLeft >= 1 && daysLeft <= 3) {
+      threeDaysList.push(timelineItem);
+      valorRiscoRecuperavel += itemTotalRisk;
+    } else if (daysLeft >= 4 && daysLeft <= 7) {
+      fourToSevenDaysList.push(timelineItem);
+      valorRiscoRecuperavel += itemTotalRisk;
+    } else if (daysLeft >= 8 && daysLeft <= 15) {
+      eightToFifteenDaysList.push(timelineItem);
+      valorRiscoRecuperavel += itemTotalRisk;
+    } else if (daysLeft <= 30) {
+      valorMonitorado += itemTotalRisk;
+    }
+  });
+
+  // Índice de Blindagem da Loja (%)
+  // Ponderação entre cobertura de cadastro e produtos com validade sadia
+  const totalCriticos = expiredOrTodayList.length + threeDaysList.length;
+  const taxaValidadeSegura = totalItensAtivos > 0 
+    ? Math.max(0, Math.round(((totalItensAtivos - totalCriticos) / totalItensAtivos) * 100))
+    : 100;
+  const blindagemScore = totalProdutos > 0 
+    ? Math.round((coveragePercent * 0.4) + (taxaValidadeSegura * 0.6))
+    : 100;
+
+  // Processamento do Raio-X por Departamentos
+  const departmentHealthData: DepartmentHealth[] = departmentsRaw.map(dept => {
+    let totalItems = 0;
+    let criticalCount = 0;
+    let criticalQty = 0;
+    let financialRisk = 0;
+
+    dept.products.forEach(prod => {
+      prod.collections.forEach(col => {
+        const exp = new Date(col.expirationDate);
+        exp.setUTCHours(0, 0, 0, 0);
+        const days = Math.ceil((exp.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
+        totalItems += col.quantity;
+
+        if (days <= 15) {
+          criticalCount += 1;
+          criticalQty += col.quantity;
+          financialRisk += col.quantity * parseItemPrice(col.priceChange);
+        }
+      });
+    });
+
+    const healthScore = totalItems > 0
+      ? Math.max(0, Math.min(100, Math.round(((totalItems - criticalQty) / totalItems) * 100)))
+      : 100;
+
+    return {
+      id: dept.id,
+      name: dept.name,
+      totalProducts: dept.products.length,
+      totalItems,
+      criticalCount,
+      healthScore,
+      financialRisk
+    };
+  }).sort((a, b) => a.healthScore - b.healthScore); // Menor saúde primeiro para destacar ação
+
+  // Evolução dos Últimos 7 Dias (Inserções vs Perdas)
   const evolutionMap = new Map<string, { Insercoes: number, Perdas: number, topInsercoesList: string[], topPerdasList: string[] }>();
   for (let i = 6; i >= 0; i--) {
     const d = new Date(todayUTC);
@@ -134,7 +255,7 @@ export default async function DashboardPage() {
     topPerdasList: data.topPerdasList
   }));
 
-  // Build Product Loss Data (Top 5 perdas by Product in DB history)
+  // Top 5 Produtos com Maior Perda (Histórico)
   const expiredCollections = await prisma.collection.findMany({
     where: { 
       storeId,
@@ -160,180 +281,212 @@ export default async function DashboardPage() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-10">
 
-      {/* TOP ROW: KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* TOP HEADER EXECUTIVO ARTOS */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-emerald-500/5 blur-3xl pointer-events-none" />
         
-        <Link href="/relatorios?filter=expiring_30" className="bg-gradient-to-br from-green-50 to-white p-5 rounded-2xl border border-green-100 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex justify-between items-start">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Painel de Gestão e Blindagem de Validades
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              {storeData?.name || 'Visão Executiva da Loja'}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+              Monitoramento financeiro e preventivo em tempo real. Identifique riscos antes que se tornem perdas de caixa.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/coletar"
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.02] text-sm"
+            >
+              <CalendarCheck2 className="w-4 h-4" /> Nova Coleta
+            </Link>
+            <Link
+              href="/relatorios"
+              className="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-700 px-4 py-2.5 rounded-xl transition-all text-sm font-semibold"
+            >
+              Relatório Completo <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* 4 CARDS FINANCEIROS & MÉTRICAS EXECUTIVAS ARTOS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        {/* Card 1: R$ em Risco Imediato */}
+        <Link 
+          href="/relatorios?filter=expired" 
+          className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-rose-300 transition-all group flex flex-col justify-between relative overflow-hidden"
+        >
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-green-700 font-semibold mb-1">À Recuperar (30 dias)</p>
-              <h3 className="text-3xl font-black text-green-900 tracking-tight">{ofertaGreen}</h3>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                Risco Imediato (Perda)
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">
+                R$ {valorRiscoImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h3>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-green-100/50 text-green-600 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-              <BadgePercent className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <TrendingDown className="w-5 h-5" />
             </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-500 font-medium">
+              <strong className="text-rose-700 font-black">{expiredOrTodayList.length}</strong> itens críticos
+            </span>
+            <span className="text-[11px] text-rose-700 font-bold group-hover:underline flex items-center gap-0.5">
+              Resolver <ArrowRight className="w-3 h-3" />
+            </span>
           </div>
         </Link>
 
-        <Link href="/relatorios?filter=expiring_15" className="bg-gradient-to-br from-yellow-50 to-white p-5 rounded-2xl border border-yellow-100 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex justify-between items-start">
+        {/* Card 2: R$ em Potencial de Recuperação */}
+        <Link 
+          href="/relatorios?filter=expiring_15" 
+          className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-amber-300 transition-all group flex flex-col justify-between relative overflow-hidden"
+        >
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-yellow-700 font-semibold mb-1">Vencem em (15 dias)</p>
-              <h3 className="text-3xl font-black text-yellow-900 tracking-tight">{expiringYellow}</h3>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                Potencial de Recuperação
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black text-amber-700 tracking-tight">
+                R$ {valorRiscoRecuperavel.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h3>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-yellow-100/50 text-yellow-600 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-              <AlarmClock className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Coins className="w-5 h-5" />
             </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-500 font-medium">
+              <strong className="text-amber-800 font-black">{threeDaysList.length + fourToSevenDaysList.length + eightToFifteenDaysList.length}</strong> itens em até 15 dias
+            </span>
+            <span className="text-[11px] text-amber-800 font-bold group-hover:underline flex items-center gap-0.5">
+              Criar Oferta <ArrowRight className="w-3 h-3" />
+            </span>
           </div>
         </Link>
 
-        <Link href="/relatorios?filter=expired" className="bg-gradient-to-br from-red-50 to-white p-5 rounded-2xl border border-red-100 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex justify-between items-start">
+        {/* Card 3: R$ Sob Monitoramento Seguro */}
+        <Link 
+          href="/relatorios?filter=expiring_30" 
+          className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group flex flex-col justify-between relative overflow-hidden"
+        >
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-red-700 font-semibold mb-1">Vencidos</p>
-              <h3 className="text-3xl font-black text-red-900 tracking-tight">{expiredRed}</h3>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                Prevenção Futura (30 dias)
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black text-emerald-800 tracking-tight">
+                R$ {valorMonitorado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h3>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-red-100/50 text-red-600 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-              <Ban className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5" />
             </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-500 font-medium">
+              Vigilância preventiva ativa
+            </span>
+            <span className="text-[11px] text-emerald-800 font-bold group-hover:underline flex items-center gap-0.5">
+              Ver lista <ArrowRight className="w-3 h-3" />
+            </span>
           </div>
         </Link>
 
-        <Link href="/relatorios?filter=all" className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex justify-between items-start">
+        {/* Card 4: Índice de Blindagem da Loja */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-blue-700 font-semibold mb-1">Coletas de Hoje</p>
-              <h3 className="text-3xl font-black text-blue-900 tracking-tight">{coletasHoje}</h3>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                Índice de Blindagem
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                {blindagemScore}%
+              </h3>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <ClipboardCheck className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center">
+              <Target className="w-5 h-5 text-emerald-700" />
             </div>
           </div>
-        </Link>
+          
+          <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5">
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-emerald-600 h-full rounded-full transition-all duration-1000"
+                style={{ width: `${blindagemScore}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center text-[11px] text-slate-500">
+              <span>{coveredProductsCount} de {totalProdutos} produtos mapeados</span>
+              <span className="font-bold text-slate-700">{coletasHoje} hoje</span>
+            </div>
+          </div>
+        </div>
 
       </div>
 
-      {/* MIDDLE ROW: Charts */}
+      {/* WHATSAPP AUTOMATION PILL BANNER */}
+      <div className="bg-emerald-950 border border-emerald-800/80 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3 text-center sm:text-left">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+            <Smartphone className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <h4 className="text-sm font-bold text-white">Automação de Alertas WhatsApp Artos</h4>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Ativo
+              </span>
+            </div>
+            <p className="text-xs text-emerald-200/80 mt-0.5">
+              Notificações diárias enviadas diretamente aos operadores com antecedência de 3 dias para queima de estoque.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/usuarios"
+          className="shrink-0 text-xs font-bold bg-white text-emerald-950 hover:bg-emerald-50 px-4 py-2 rounded-xl transition-all shadow-sm"
+        >
+          Gerenciar Destinatários
+        </Link>
+      </div>
+
+      {/* TIMELINE DECISION MATRIX (AÇÕES RÁPIDAS & PRECIFICAÇÃO) */}
+      <TimelineDecisionMatrix
+        expiredOrToday={expiredOrTodayList}
+        threeDays={threeDaysList}
+        fourToSevenDays={fourToSevenDaysList}
+        eightToFifteenDays={eightToFifteenDaysList}
+      />
+
+      {/* RAIO-X POR DEPARTAMENTOS */}
+      <DepartmentHealthCards departments={departmentHealthData} />
+
+      {/* GRÁFICOS EXECUTIVOS ARTOS */}
       <div className="hidden md:block">
         <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
       </div>
 
-      {/* BOTTOM ROW: Actionable & Coverage */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Ação Imediata */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col h-[320px]">
-          <div className="flex items-center justify-between mb-4 shrink-0">
-            <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-              <CalendarClock className="w-5 h-5 text-orange-500" /> Ação Imediata
-            </h3>
-            <span className="text-[10px] font-medium bg-orange-100 text-orange-700 px-2 py-0.5 rounded">Próximos 5 vencimentos</span>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto min-h-0 pr-2 custom-scrollbar">
-            {imediateActions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-1">
-                <ShieldCheck className="w-10 h-10 text-slate-200" />
-                <p className="text-sm">Nenhum vencimento próximo. Tudo seguro!</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {imediateActions.map((col: any) => {
-                  const expDate = new Date(col.expirationDate);
-                  expDate.setUTCHours(0, 0, 0, 0);
-                  
-                  const daysLeft = Math.ceil((expDate.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
-                  
-                  return (
-                    <div key={col.id} className="py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-lg px-2 -mx-2">
-                      <div className="flex items-start gap-2.5">
-                        <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center shrink-0 ${daysLeft <= 15 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                          <span className="text-[9px] uppercase font-bold opacity-70">Dias</span>
-                          <span className="text-base font-black leading-none">{daysLeft}</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm line-clamp-1">{col.product?.description}</p>
-                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
-                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">{col.product?.department?.name || 'Sem Depto'}</span>
-                            {col.shelfLocation && <span>Local: <strong>{col.shelfLocation}</strong></span>}
-                            <span>Lote: <strong>{col.batch || 'N/A'}</strong></span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0 ml-2">
-                         <span className="block text-[10px] text-slate-400 mb-0.5">Estoque</span>
-                         <span className="font-bold text-slate-700 text-sm">{col.quantity} un</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          {imediateActions.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-100 text-center shrink-0">
-              <Link href="/relatorios" className="text-primary hover:text-primary-hover text-xs font-semibold flex items-center justify-center gap-1">
-                Ver Relatório Completo <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-          )}
+      {/* FOOTER ARTOS COM A LOGO DA EMPRESA */}
+      <div className="flex flex-col items-center justify-center pt-8 pb-4 gap-2">
+        <div className="w-44 flex items-center justify-center">
+          <img src="/logo-empresa.png?v=3" alt="Logo Artos Consultoria" className="w-full h-auto object-contain" />
         </div>
-
-        {/* Cobertura de Prevenção */}
-        <div className="hidden md:flex bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex-col items-center justify-center text-center relative overflow-hidden h-[320px]">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
-          
-          <h3 className="font-bold text-slate-800 text-base mb-1">Cobertura de Validades</h3>
-          <p className="text-xs text-slate-500 mb-6">Produtos rastreados vs Total cadastrado</p>
-
-          <div className="relative w-32 h-32 flex items-center justify-center mb-4">
-            {/* SVG Donut Chart */}
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-slate-100"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="text-indigo-500 drop-shadow-sm transition-all duration-1000 ease-out"
-                strokeDasharray={`${coveragePercent}, 100`}
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-slate-800">{coveragePercent}%</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 w-full max-w-[200px] border-t border-slate-100 pt-4 mt-auto">
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Mapeados</p>
-              <p className="font-bold text-indigo-600 text-lg leading-tight">{coveredProductsCount}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Faltando</p>
-              <p className="font-bold text-slate-600 text-lg leading-tight">{totalProdutos - coveredProductsCount}</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* FOOTER LOGO */}
-      <div className="flex flex-col items-center justify-center pt-6 pb-2 gap-2">
-        <div className="w-40 flex items-center justify-center">
-          <img src="/logo-empresa.png?v=3" alt="Logo Empresa" className="w-full h-auto object-contain" />
-        </div>
-        <span className="text-[10px] text-slate-400 text-center px-4 leading-tight whitespace-nowrap mt-1">
-          &copy; 2026 Artos Consultoria Empresarial. Todos os direitos reservados.
+        <span className="text-[11px] text-slate-400 text-center px-4 leading-tight whitespace-nowrap mt-1 font-medium">
+          &copy; 2026 Artos Consultoria Empresarial. Sistema de Prevenção de Perdas e Validades.
         </span>
       </div>
 
