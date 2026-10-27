@@ -127,17 +127,17 @@ export default function DashboardCharts({
         {/* Header com Filtro de Período */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
           <div>
-            <h3 className="font-bold text-slate-900 text-base tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-emerald-700" /> Tendência de Rastreamento
+            <h3 className="font-bold text-slate-900 text-base tracking-tight flex items-center gap-2 whitespace-nowrap">
+              <TrendingUp className="w-5 h-5 text-emerald-700 shrink-0" /> Tendência de Rastreamento
             </h3>
-            <p className="text-xs text-slate-500">
-              Mapeamento vs Vencimentos ({startFormatted} a {endFormatted})
+            <p className="text-xs text-slate-500 whitespace-nowrap mt-0.5">
+              Mapeamento de Coletas vs Vencimentos
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Botões Rápidos */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold text-slate-600">
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold text-slate-600 shrink-0">
               <button 
                 type="button"
                 onClick={() => setQuickPreset(7)}
@@ -161,14 +161,14 @@ export default function DashboardCharts({
               </button>
             </div>
 
-            {/* Inputs de Data De / Até */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 px-2 py-1 rounded-xl text-xs shadow-inner">
+            {/* Inputs de Data De / Até na mesma linha */}
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 px-2 py-1 rounded-xl text-xs shadow-inner shrink-0">
               <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <input 
                 type="date"
                 value={startDate}
                 onChange={(e) => handleCustomDateChange(e.target.value, endDate)}
-                className="bg-transparent text-slate-700 font-semibold text-xs focus:outline-none cursor-pointer w-24 sm:w-auto"
+                className="bg-transparent text-slate-700 font-semibold text-xs focus:outline-none cursor-pointer"
                 title="Data Inicial"
               />
               <span className="text-slate-400 font-bold text-[10px]">até</span>
@@ -176,7 +176,7 @@ export default function DashboardCharts({
                 type="date"
                 value={endDate}
                 onChange={(e) => handleCustomDateChange(startDate, e.target.value)}
-                className="bg-transparent text-slate-700 font-semibold text-xs focus:outline-none cursor-pointer w-24 sm:w-auto"
+                className="bg-transparent text-slate-700 font-semibold text-xs focus:outline-none cursor-pointer"
                 title="Data Final"
               />
             </div>
