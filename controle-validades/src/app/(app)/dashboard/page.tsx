@@ -125,6 +125,7 @@ export default async function DashboardPage() {
   const threeDaysList: TimelineItem[] = [];
   const fourToSevenDaysList: TimelineItem[] = [];
   const eightToFifteenDaysList: TimelineItem[] = [];
+  const thirtyDaysList: TimelineItem[] = [];
 
   let valorRiscoImediato = 0;
   let valorRiscoRecuperavel = 0;
@@ -168,6 +169,7 @@ export default async function DashboardPage() {
       eightToFifteenDaysList.push(timelineItem);
       valorRiscoRecuperavel += itemTotalRisk;
     } else if (daysLeft <= 30) {
+      thirtyDaysList.push(timelineItem);
       valorMonitorado += itemTotalRisk;
     }
   });
@@ -400,7 +402,7 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500 font-medium">
-              Vigilância preventiva ativa
+              <strong className="text-emerald-800 font-bold">{thirtyDaysList.length}</strong> {thirtyDaysList.length === 1 ? 'lote em 30 dias' : 'lotes em 30 dias'}
             </span>
             <span className="text-[11px] text-emerald-800 font-bold group-hover:underline flex items-center gap-0.5">
               Ver lista <ArrowRight className="w-3 h-3" />
@@ -435,7 +437,7 @@ export default async function DashboardPage() {
               />
             </div>
             <div className="flex justify-between items-center text-[11px] text-slate-500">
-              <span>{coveredProductsCount} de {totalProdutos} produtos mapeados</span>
+              <span><strong>{activeCollections.length}</strong> coletas ({coveredProductsCount} produtos)</span>
               <span className="font-bold text-slate-700">{coletasHoje} hoje</span>
             </div>
           </div>
