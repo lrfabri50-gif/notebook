@@ -17,6 +17,7 @@ import TimelineDecisionMatrix, { TimelineItem } from './TimelineDecisionMatrix';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getEvolutionDataByRange } from './actions';
 
 function parseItemPrice(tagPrice: string | null | undefined, priceChange?: string | null | undefined): number {
   // O Preço da Etiqueta fixado pelo auxiliar tem prioridade (valor da gôndola), seguido de priceChange
@@ -212,44 +213,10 @@ export default async function DashboardPage() {
     };
   }).sort((a, b) => a.healthScore - b.healthScore); // Menor saúde primeiro para destacar ação
 
-  // Evolução dos Últimos 7 Dias (Inserções vs Perdas)
-  const evolutionMap = new Map<string, { Insercoes: number, Perdas: number, topInsercoesList: string[], topPerdasList: string[] }>();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(todayUTC);
-    d.setUTCDate(todayUTC.getUTCDate() - i);
-    const dayStr = d.toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' });
-    evolutionMap.set(dayStr, { Insercoes: 0, Perdas: 0, topInsercoesList: [], topPerdasList: [] });
-  }
-
-  collectionsLast7Days.forEach(c => {
-    if (!c.collectedAt) return;
-    const dayStr = c.collectedAt.toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'America/Sao_Paulo' });
-    if (evolutionMap.has(dayStr)) {
-      const isLoss = c.expirationDate <= todayUTC;
-      const data = evolutionMap.get(dayStr)!;
-      const prodName = c.product?.description || 'Desconhecido';
-      
-      data.Insercoes += 1;
-      if (data.topInsercoesList.length < 10) {
-        data.topInsercoesList.push(prodName);
-      }
-
-      if (isLoss) {
-        data.Perdas += 1;
-        if (data.topPerdasList.length < 10) {
-          data.topPerdasList.push(`${prodName} - Qtd: ${c.quantity}`);
-        }
-      }
-    }
-  });
-  
-  const evolutionData = Array.from(evolutionMap.entries()).map(([name, data]) => ({
-    name,
-    Insercoes: data.Insercoes,
-    Perdas: data.Perdas,
-    topInsercoesList: data.topInsercoesList,
-    topPerdasList: data.topPerdasList
-  }));
+  // Evolução Inicial dos Últimos 7 Dias (Inserções vs Vencimentos)
+  const endFormattedDate = todayUTC.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const startFormattedDate = last7Days.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const evolutionData = await getEvolutionDataByRange(startFormattedDate, endFormattedDate);
 
   // Top 5 Produtos com Maior Perda (Histórico)
   const expiredCollections = await prisma.collection.findMany({
@@ -485,7 +452,12 @@ export default async function DashboardPage() {
 
       {/* GRÁFICOS EXECUTIVOS ARTOS */}
       <div className="hidden md:block">
-        <DashboardCharts evolutionData={evolutionData} deptoData={deptoData} />
+        <DashboardCharts 
+          evolutionData={evolutionData} 
+          initialStartDate={startFormattedDate}
+          initialEndDate={endFormattedDate}
+          deptoData={deptoData} 
+        />
       </div>
 
       {/* FOOTER ARTOS COM A LOGO DA EMPRESA */}
