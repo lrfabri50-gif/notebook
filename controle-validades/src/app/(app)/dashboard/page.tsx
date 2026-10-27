@@ -138,7 +138,7 @@ export default async function DashboardPage() {
     expDate.setUTCHours(0, 0, 0, 0);
     const daysLeft = Math.ceil((expDate.getTime() - todayUTC.getTime()) / (1000 * 3600 * 24));
     
-    const unitPrice = parseItemPrice(c.tagPrice, c.priceChange);
+    const unitPrice = parseItemPrice((c as any).tagPrice, c.priceChange);
     const itemTotalRisk = c.quantity * unitPrice;
     totalItensAtivos += c.quantity;
 
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
       quantity: c.quantity,
       expirationFormatted: expDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
       priceChange: c.priceChange,
-      tagPrice: c.tagPrice,
+      tagPrice: (c as any).tagPrice || null,
       estimatedRisk: itemTotalRisk
     };
 
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
         if (days <= 15) {
           criticalCount += 1;
           criticalQty += col.quantity;
-          financialRisk += col.quantity * parseItemPrice(col.tagPrice, col.priceChange);
+          financialRisk += col.quantity * parseItemPrice((col as any).tagPrice, col.priceChange);
         }
       });
     });
