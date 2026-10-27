@@ -16,6 +16,7 @@ export interface TimelineItem {
   quantity: number;
   expirationFormatted: string;
   priceChange: string | null;
+  tagPrice: string | null;
   estimatedRisk: number; // R$
 }
 
@@ -196,9 +197,14 @@ export default function TimelineDecisionMatrix({
                   <div className="text-left sm:text-right">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Estoque</span>
                     <span className="font-black text-slate-800 text-sm">{item.quantity} un</span>
+                    {item.tagPrice && (
+                      <span className="text-[10px] text-slate-500 block">
+                        Etiqueta: <strong className="text-slate-700 font-bold">R$ {item.tagPrice}</strong>
+                      </span>
+                    )}
                     {item.estimatedRisk > 0 && (
                       <span className="text-[11px] text-rose-600 block font-semibold">
-                        R$ {item.estimatedRisk.toFixed(2)}
+                        Total: R$ {item.estimatedRisk.toFixed(2)}
                       </span>
                     )}
                   </div>
