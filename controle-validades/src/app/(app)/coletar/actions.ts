@@ -16,6 +16,7 @@ export async function createCollection(formData: FormData) {
   const quantity = parseInt(formData.get('quantity') as string, 10);
   const batch = formData.get('batch') as string;
   const shelfLocation = formData.get('shelfLocation') as string;
+  const tagPrice = formData.get('tagPrice') as string;
 
   if (!productId || !expirationStr) return { error: 'Campos obrigatórios faltando.' };
 
@@ -41,6 +42,7 @@ export async function createCollection(formData: FormData) {
       quantity: quantity || 1,
       batch: batch || null,
       shelfLocation: shelfLocation || null,
+      tagPrice: tagPrice ? tagPrice.trim() : null,
       status: 'pending' // Default status
     }
   });

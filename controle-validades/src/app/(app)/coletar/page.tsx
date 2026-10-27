@@ -59,6 +59,7 @@ export default function ColetaPage() {
   const [barcode, setBarcode] = useState('');
   const [expiration, setExpiration] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [tagPrice, setTagPrice] = useState('');
   const [batch, setBatch] = useState('');
   const [location, setLocation] = useState('');
   
@@ -128,6 +129,7 @@ export default function ColetaPage() {
     formData.append('barcode', barcode);
     formData.append('expirationDate', expiration);
     formData.append('quantity', quantity);
+    formData.append('tagPrice', tagPrice);
     formData.append('batch', batch);
     formData.append('shelfLocation', location);
 
@@ -146,6 +148,7 @@ export default function ColetaPage() {
       setSelectedProductId('');
       setExpiration('');
       setQuantity('1');
+      setTagPrice('');
       setBatch('');
       setLocation('');
     }
@@ -215,6 +218,16 @@ export default function ColetaPage() {
             <div className="w-20">
               <label className="block text-xs font-medium text-slate-500 mb-1">Qtde</label>
               <input type="number" value={quantity} onChange={(e)=>setQuantity(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" min="1" required />
+            </div>
+            <div className="w-28">
+              <label className="block text-xs font-medium text-slate-500 mb-1">Preço Etiqueta</label>
+              <input 
+                type="text" 
+                value={tagPrice} 
+                onChange={(e)=>setTagPrice(e.target.value)} 
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
+                placeholder="R$ 0,00" 
+              />
             </div>
             <div className="w-28">
               <label className="block text-xs font-medium text-slate-500 mb-1">Lote (Opc)</label>
@@ -309,9 +322,22 @@ export default function ColetaPage() {
                   <label className="block text-xs font-medium text-slate-500 mb-1">Vencimento</label>
                   <input type="date" value={expiration} onChange={(e)=>setExpiration(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" required />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Quantidade</label>
-                  <input type="number" value={quantity} onChange={(e)=>setQuantity(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" min="1" required />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Quantidade</label>
+                    <input type="number" value={quantity} onChange={(e)=>setQuantity(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" min="1" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Preço Etiqueta (R$)</label>
+                    <input 
+                      type="text" 
+                      inputMode="decimal"
+                      value={tagPrice} 
+                      onChange={(e)=>setTagPrice(e.target.value)} 
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
+                      placeholder="Ex: 8,90" 
+                    />
+                  </div>
                 </div>
               </div>
 

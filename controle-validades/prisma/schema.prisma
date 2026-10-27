@@ -96,6 +96,7 @@ model Collection {
   shelfLocation  String?   
   status         String    @default("pending") 
   priceChange    String?
+  tagPrice       String?
   collectedAt    DateTime? @default(now()) 
   auditedAt      DateTime? 
 
