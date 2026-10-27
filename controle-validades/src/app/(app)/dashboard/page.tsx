@@ -437,7 +437,7 @@ export default async function DashboardPage() {
               />
             </div>
             <div className="flex justify-between items-center text-[11px] text-slate-500">
-              <span><strong>{activeCollections.length}</strong> coletas ({coveredProductsCount} produtos)</span>
+              <span><strong>{activeCollections.length}</strong> coletas ({expiredOrTodayList.length} {expiredOrTodayList.length === 1 ? 'produto vencido' : 'produtos vencidos'})</span>
               <span className="font-bold text-slate-700">{coletasHoje} hoje</span>
             </div>
           </div>
