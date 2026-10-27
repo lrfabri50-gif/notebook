@@ -324,15 +324,18 @@ export default async function DashboardPage() {
       {/* 4 CARDS FINANCEIROS & MÉTRICAS EXECUTIVAS ARTOS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* Card 1: Valor de Perdas - Preço de Venda Atual */}
+        {/* Card 1: Perda / Quebra por Valor de Venda */}
         <Link 
           href="/relatorios?filter=expired" 
           className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-rose-300 transition-all group flex flex-col justify-between relative overflow-hidden"
         >
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                Valor de Perdas - Preço de Venda Atual
+              <span className="text-[12px] font-bold uppercase tracking-wider text-slate-800 block leading-tight">
+                Perda / Quebra
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 block tracking-wide uppercase mt-0.5 mb-1.5">
+                Por Valor de Venda
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">
                 R$ {valorRiscoImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -359,8 +362,11 @@ export default async function DashboardPage() {
         >
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                Risco a Recuperar (Até 15 dias)
+              <span className="text-[12px] font-bold uppercase tracking-wider text-slate-800 block leading-tight">
+                Risco a Recuperar
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 block tracking-wide uppercase mt-0.5 mb-1.5">
+                Vencem em até 15 dias
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-amber-700 tracking-tight">
                 R$ {valorRiscoRecuperavel.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -387,8 +393,11 @@ export default async function DashboardPage() {
         >
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                Prevenção Futura (30 dias)
+              <span className="text-[12px] font-bold uppercase tracking-wider text-slate-800 block leading-tight">
+                Prevenção Futura
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 block tracking-wide uppercase mt-0.5 mb-1.5">
+                Monitorados em 30 dias
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-emerald-800 tracking-tight">
                 R$ {valorMonitorado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -412,8 +421,11 @@ export default async function DashboardPage() {
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+              <span className="text-[12px] font-bold uppercase tracking-wider text-slate-800 block leading-tight">
                 Índice de Blindagem
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 block tracking-wide uppercase mt-0.5 mb-1.5">
+                Segurança da Loja
               </span>
               <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 {blindagemScore}%
