@@ -148,29 +148,9 @@ export default function PlanManagementClient({
   };
 
   const handleConfirmPayment = async () => {
-    // Se escolheu Cartão de Crédito, redireciona para o Checkout Seguro da InfinitePay ($luiz_fabri50)
-    if (paymentMethod === 'credit_card') {
-      await handleInfinitePayRedirect();
-      return;
-    }
-
-    setIsSaving(true);
-    setFeedbackMsg(null);
-    try {
-      await processCheckout({
-        billingCycle: selectedCycle,
-        paymentMethod: 'PIX Instantâneo'
-      });
-      setFeedbackMsg({ type: 'success', text: `Plano ${selectedCycle === 'anual' ? 'Anual' : 'Mensal'} ativado com sucesso!` });
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setFeedbackMsg(null);
-      }, 1500);
-    } catch (err: any) {
-      setFeedbackMsg({ type: 'error', text: err.message || 'Erro ao processar ativação do plano.' });
-    } finally {
-      setIsSaving(false);
-    }
+    // Redireciona tanto PIX quanto Cartão para o Checkout Integrado Oficial da InfinitePay ($luiz_fabri50)
+    // garantindo que o plano só seja liberado após a confirmação real do pagamento!
+    await handleInfinitePayRedirect();
   };
 
   return (
@@ -883,13 +863,12 @@ export default function PlanManagementClient({
                   <div className="bg-emerald-50/70 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-900 space-y-1">
                     <p className="font-bold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      Como pagar via PIX:
+                      Como pagar via PIX Automático (InfinitePay):
                     </p>
                     <ol className="list-decimal list-inside text-[11px] text-emerald-800 space-y-0.5 pl-1">
-                      <li>Abra o aplicativo do seu banco ou celular.</li>
-                      <li>Escolha pagar via PIX por chave e cole o e-mail: <strong>{pixKeyOfficial}</strong></li>
-                      <li>Confirme o valor exato de <strong>R$ {selectedPrice.toFixed(2).replace('.', ',')}</strong></li>
-                      <li>Clique no botão verde abaixo para confirmar a ativação imediata.</li>
+                      <li>Clique no botão verde abaixo para abrir o <strong>QR Code Oficial da InfinitePay ({infiniteTagOfficial})</strong>.</li>
+                      <li>Escaneie o QR Code ou copie o código PIX Copia e Cola no app do seu banco.</li>
+                      <li>Assim que o pagamento de <strong>R$ {selectedPrice.toFixed(2).replace('.', ',')}</strong> for aprovado, seu plano é liberado automaticamente na hora!</li>
                     </ol>
                   </div>
                 </div>
@@ -1009,16 +988,14 @@ export default function PlanManagementClient({
                 >
                   {isSaving ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : paymentMethod === 'credit_card' ? (
-                    <ExternalLink className="w-4 h-4" />
                   ) : (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <ExternalLink className="w-4 h-4" />
                   )}
                   {isSaving
-                    ? 'Processando...'
+                    ? 'Abrindo InfinitePay...'
                     : paymentMethod === 'credit_card'
                     ? 'Pagar com Cartão na InfinitePay'
-                    : 'Confirmar e Ativar Assinatura'}
+                    : 'Gerar QR Code PIX na InfinitePay'}
                 </button>
               </div>
 

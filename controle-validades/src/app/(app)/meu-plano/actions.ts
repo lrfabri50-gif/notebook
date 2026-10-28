@@ -137,6 +137,7 @@ export async function createInfinitePayCheckout({
   });
 
   const handle = (process.env.INFINITEPAY_HANDLE || 'luiz_fabri50').replace(/^\$/, '');
+  const apiKey = process.env.INFINITEPAY_API_KEY || 'inchk_zhSn6ehvk-n1D6yvkH3nZ-S4WVqpvfecxNJCsZqu8ds';
   const cleanOrigin = origin.replace(/\/$/, '');
 
   const payload = {
@@ -157,7 +158,7 @@ export async function createInfinitePayCheckout({
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(process.env.INFINITEPAY_API_KEY ? { 'X-Api-Key': process.env.INFINITEPAY_API_KEY } : {})
+      'X-Api-Key': apiKey
     },
     body: JSON.stringify(payload)
   });
@@ -215,13 +216,14 @@ export async function verifyInfinitePayPayment({
   }
 
   const handle = (process.env.INFINITEPAY_HANDLE || 'luiz_fabri50').replace(/^\$/, '');
+  const apiKey = process.env.INFINITEPAY_API_KEY || 'inchk_zhSn6ehvk-n1D6yvkH3nZ-S4WVqpvfecxNJCsZqu8ds';
 
   try {
     const checkRes = await fetch('https://api.checkout.infinitepay.io/payment_check', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(process.env.INFINITEPAY_API_KEY ? { 'X-Api-Key': process.env.INFINITEPAY_API_KEY } : {})
+        'X-Api-Key': apiKey
       },
       body: JSON.stringify({
         handle,
