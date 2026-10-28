@@ -52,7 +52,7 @@ export default function RegisterPage() {
           </div>
           <h2 className="text-2xl font-bold text-slate-800 mb-2">Loja Criada!</h2>
           <p className="text-slate-500 mb-6">
-            O seu painel de controle e seu período de testes de 14 dias estão prontos.
+            O seu painel de controle e seu período de testes de 7 dias estão prontos.
           </p>
           <p className="text-sm text-slate-400">Redirecionando para o login...</p>
         </div>

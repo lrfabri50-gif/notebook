@@ -22,9 +22,9 @@ export async function POST(request: Request) {
     // Hash da senha
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Trial de 14 dias
+    // Trial de 7 dias
     const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 14);
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
 
     // Pre-gerar ID do usuário para vincular à Assinatura
     const newUserId = crypto.randomUUID();

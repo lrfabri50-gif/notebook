@@ -26,12 +26,12 @@ export default async function MeuPlanoPage() {
   const isActive = subscription?.status === 'active';
 
   let trialDaysLeft = 0;
-  if (isTrial && subscription?.createdAt) {
-    const trialStart = new Date(subscription.createdAt);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - trialStart.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    trialDaysLeft = Math.max(0, 7 - diffDays); // Assuming 7 days trial
+  if (isTrial && subscription) {
+    const end = subscription.trialEndDate
+      ? new Date(subscription.trialEndDate)
+      : new Date(new Date(subscription.createdAt || new Date()).getTime() + 7 * 24 * 60 * 60 * 1000);
+    const diff = end.getTime() - new Date().getTime();
+    trialDaysLeft = Math.max(0, Math.min(7, Math.ceil(diff / (1000 * 3600 * 24))));
   }
 
   return (
