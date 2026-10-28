@@ -12,12 +12,11 @@ interface Props {
 }
 
 export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, adminEmail }: Props) {
-  // Configurações de Preço
-  const BASE_PRICE = 23.90;
-  const EXTRA_USER_PRICE = 5.90;
+  // Configurações de Preço Oficiais Artos
+  const PRICE_MENSAL = 49.90;
+  const PRICE_ANUAL = 498.99;
 
   // Estado
-  const [additionalUsers, setAdditionalUsers] = useState(maxUsers > 1 ? maxUsers - 1 : 0);
   const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>(currentPlanName.toLowerCase().includes('anual') ? 'anual' : 'mensal');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'form' | 'payment' | 'success'>(isActive ? 'success' : 'form');
@@ -28,9 +27,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
     email: adminEmail || ''
   });
 
-  const monthlyTotal = BASE_PRICE + (additionalUsers * EXTRA_USER_PRICE);
-  const annualTotal = monthlyTotal * 11; // Desconto: Paga 11, Leva 12 (~8% off)
-  const finalAmount = billingCycle === 'mensal' ? monthlyTotal : annualTotal;
+  const finalAmount = billingCycle === 'mensal' ? PRICE_MENSAL : PRICE_ANUAL;
 
   const handleGoToPayment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +42,8 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
     setLoading(true);
     try {
       await processCheckout({
-        additionalUsers,
         billingCycle,
-        amount: finalAmount
+        paymentMethod: 'PIX Instantâneo'
       });
       setStep('success');
     } catch (err: any) {

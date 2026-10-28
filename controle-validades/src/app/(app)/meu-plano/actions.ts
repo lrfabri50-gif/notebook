@@ -43,13 +43,13 @@ export async function getSubscriptionDetails() {
 }
 
 export async function processCheckout({
-  additionalUsers,
   billingCycle,
-  amount
+  paymentMethod = 'PIX'
 }: {
-  additionalUsers: number;
   billingCycle: 'mensal' | 'anual';
-  amount: number;
+  paymentMethod?: string;
+  additionalUsers?: number;
+  amount?: number;
 }) {
   const session = await getSession();
   if (!session || session.role !== 'admin') {
@@ -64,35 +64,37 @@ export async function processCheckout({
     throw new Error('Assinatura não encontrada.');
   }
 
-  const planName = `Plano Flexível (${billingCycle === 'anual' ? 'Anual' : 'Mensal'})`;
-  const maxUsers = 1 + additionalUsers;
+  const isAnual = billingCycle === 'anual';
+  const planName = isAnual ? 'Plano Anual Blindagem' : 'Plano Mensal';
+  const maxUsers = isAnual ? 5 : 1;
+  const finalPrice = isAnual ? 498.99 : 49.90;
 
-  // Atualiza o banco
+  // Atualiza o banco com a nova regra de plano
   await prisma.subscription.update({
     where: { id: store.subscriptionId },
     data: {
       status: 'active',
       planName: planName,
       maxUsers: maxUsers,
-      basePlanPrice: amount,
+      basePlanPrice: finalPrice,
       whatsappAddon: true,
       whatsappAddonPrice: 0 // Grátis
     }
   });
 
-  // Registra um pagamento de mentirinha
+  // Registra o pagamento com o método selecionado
   await prisma.payment.create({
     data: {
       subscriptionId: store.subscriptionId,
-      amount: amount,
-      paymentMethod: 'Checkout (Simulado)',
+      amount: finalPrice,
+      paymentMethod: paymentMethod,
       status: 'paid',
       paidAt: new Date()
     }
   });
 
   revalidatePath('/meu-plano');
-  revalidatePath('/usuarios'); // Importante para destravar os limites
+  revalidatePath('/usuarios'); // Importante para destravar os limites da equipe
 
-  return { success: true };
+  return { success: true, planName, maxUsers, finalPrice };
 }

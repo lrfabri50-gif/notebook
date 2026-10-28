@@ -23,7 +23,10 @@ import {
   ExternalLink,
   MessageCircle,
   HelpCircle,
-  X
+  X,
+  QrCode,
+  Copy,
+  Check
 } from 'lucide-react';
 import { processCheckout } from './actions';
 
@@ -62,43 +65,65 @@ export default function PlanManagementClient({
   storeName,
   adminEmail
 }: PlanManagementProps) {
-  // Preços Base
-  const BASE_PRICE = 23.90;
-  const EXTRA_USER_PRICE = 5.90;
+  // Preços Oficiais Artos
+  const PRICE_MENSAL = 49.90;
+  const PRICE_ANUAL = 498.99;
+  const USERS_MENSAL = 1;
+  const USERS_ANUAL = 5;
 
-  const currentPlanName = subscription?.planName || 'Plano Flexível (Anual)';
+  const currentPlanName = subscription?.planName || 'Plano Anual Blindagem';
   const isAnnual = currentPlanName.toLowerCase().includes('anual');
-  const maxUsers = subscription?.maxUsers || 1;
-  const isActive = subscription?.status === 'active';
+  const maxUsers = subscription?.maxUsers || (isAnnual ? 5 : 1);
+  const currentPrice = subscription?.basePlanPrice || (isAnnual ? PRICE_ANUAL : PRICE_MENSAL);
 
-  // Modal de Personalização / Ajuste
+  // Modal de Troca / Pagamento
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState<'mensal' | 'anual'>(isAnnual ? 'anual' : 'mensal');
-  const [additionalUsers, setAdditionalUsers] = useState(Math.max(0, maxUsers - 1));
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card'>('pix');
+  const [cardInstallments, setCardInstallments] = useState(isAnnual ? '12' : '1');
   const [isSaving, setIsSaving] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Cálculos do Simulador
-  const monthlyTotal = BASE_PRICE + (additionalUsers * EXTRA_USER_PRICE);
-  const annualTotal = monthlyTotal * 11; // 1 mês grátis
-  const finalPrice = selectedCycle === 'mensal' ? monthlyTotal : annualTotal;
+  // Dados do Cartão (Simulação)
+  const [cardData, setCardData] = useState({
+    number: '',
+    name: '',
+    expiry: '',
+    cvv: ''
+  });
 
-  const handleSavePlan = async () => {
+  const selectedPrice = selectedCycle === 'anual' ? PRICE_ANUAL : PRICE_MENSAL;
+  const selectedUsers = selectedCycle === 'anual' ? USERS_ANUAL : USERS_MENSAL;
+  const monthlyEquivalent = selectedCycle === 'anual' ? (PRICE_ANUAL / 12) : PRICE_MENSAL;
+
+  const pixKeyOfficial = 'luizrfabricio@outlook.com';
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(pixKeyOfficial);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2500);
+  };
+
+  const handleConfirmPayment = async () => {
     setIsSaving(true);
     setFeedbackMsg(null);
     try {
+      const methodLabel = paymentMethod === 'pix' 
+        ? 'PIX Instantâneo' 
+        : `Cartão de Crédito (${selectedCycle === 'anual' ? `${cardInstallments}x` : '1x'})`;
+
       await processCheckout({
-        additionalUsers,
         billingCycle: selectedCycle,
-        amount: finalPrice
+        paymentMethod: methodLabel
       });
-      setFeedbackMsg({ type: 'success', text: 'Plano atualizado com sucesso!' });
+      setFeedbackMsg({ type: 'success', text: `Plano ${selectedCycle === 'anual' ? 'Anual' : 'Mensal'} ativado com sucesso!` });
       setTimeout(() => {
         setIsModalOpen(false);
         setFeedbackMsg(null);
       }, 1500);
     } catch (err: any) {
-      setFeedbackMsg({ type: 'error', text: err.message || 'Erro ao atualizar plano.' });
+      setFeedbackMsg({ type: 'error', text: err.message || 'Erro ao processar ativação do plano.' });
     } finally {
       setIsSaving(false);
     }
@@ -126,7 +151,7 @@ export default function PlanManagementClient({
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                {storeName} — Controle financeiro preventivo, capacidade operacional e direitos inclusos.
+                {storeName} — Gestão financeira preventiva, capacidade de equipe e direitos inclusos.
               </p>
             </div>
           </div>
@@ -134,19 +159,18 @@ export default function PlanManagementClient({
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                setAdditionalUsers(Math.max(0, maxUsers - 1));
                 setSelectedCycle(isAnnual ? 'anual' : 'mensal');
                 setIsModalOpen(true);
               }}
               className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs shadow-md transition-all"
             >
-              <Sparkles className="w-3.5 h-3.5" /> Personalizar / Adicionar Usuários
+              <Sparkles className="w-3.5 h-3.5" /> Alterar Plano / Pagamento
             </button>
             <Link
               href="/usuarios"
               className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
             >
-              <Users className="w-3.5 h-3.5" /> Equipe
+              <Users className="w-3.5 h-3.5" /> Equipe ({activeUsersCount}/{maxUsers})
             </Link>
           </div>
         </div>
@@ -166,7 +190,7 @@ export default function PlanManagementClient({
                 {isAnnual && (
                   <span className="bg-amber-50 text-amber-700 border border-amber-200 font-semibold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    Economia de ~8% (1 mês grátis)
+                    Até 5 Usuários Inclusos + 2 Meses Grátis
                   </span>
                 )}
               </div>
@@ -174,14 +198,19 @@ export default function PlanManagementClient({
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                    R$ {(subscription?.basePlanPrice || (isAnnual ? 262.90 : 23.90)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    R$ {currentPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-slate-500 text-sm font-medium">
                     / {isAnnual ? 'ano' : 'mês'}
                   </span>
+                  {isAnnual && (
+                    <span className="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full ml-2">
+                      Equivale a R$ 41,58 / mês
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  Cobrança corporativa {isAnnual ? 'anual com renovação programada' : 'mensal sem fidelidade'}. Todos os recursos liberados.
+                  Cobrança corporativa {isAnnual ? 'anual com até 5 usuários inclusos' : 'mensal para 1 usuário'}. Todos os recursos liberados.
                 </p>
               </div>
 
@@ -204,9 +233,14 @@ export default function PlanManagementClient({
 
             {/* Lado Direito: Capacidade Operacional da Loja */}
             <div className="lg:col-span-5 bg-slate-50 rounded-xl p-5 border border-slate-200/80 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Capacidade Operacional da Loja
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Capacidade Operacional da Loja
+                </h3>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                  {maxUsers} Usuários Contratados
+                </span>
+              </div>
 
               {/* Métrica 1: Usuários */}
               <div>
@@ -215,15 +249,20 @@ export default function PlanManagementClient({
                     <Users className="w-3.5 h-3.5 text-slate-500" /> Usuários da Equipe
                   </span>
                   <span className="font-bold text-slate-900">
-                    {activeUsersCount} de {maxUsers} liberado{maxUsers > 1 ? 's' : ''}
+                    {activeUsersCount} em uso de {maxUsers} liberado{maxUsers > 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                   <div 
                     className="bg-emerald-500 h-full rounded-full transition-all"
                     style={{ width: `${Math.min(100, Math.round((activeUsersCount / maxUsers) * 100))}%` }}
                   />
                 </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  {isAnnual 
+                    ? `Você tem direito a cadastrar até ${maxUsers} pessoas (1 Admin + 4 Operadores).`
+                    : 'O plano mensal inclui 1 usuário. Migre para o anual para liberar até 5 usuários.'}
+                </p>
               </div>
 
               {/* Métrica 2: Produtos & Coletas */}
@@ -244,10 +283,14 @@ export default function PlanManagementClient({
 
               <div className="pt-1">
                 <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="w-full text-center text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100/80 py-2 rounded-lg border border-emerald-200 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={() => {
+                    setSelectedCycle('anual');
+                    setIsModalOpen(true);
+                  }}
+                  className="w-full text-center text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100/80 py-2.5 rounded-lg border border-emerald-200 transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Adicionar mais operadores à equipe
+                  <Sparkles className="w-3.5 h-3.5" /> 
+                  {isAnnual ? 'Gerenciar Pagamento do Plano Anual' : 'Fazer Upgrade para Anual (Até 5 Usuários)'}
                 </button>
               </div>
             </div>
@@ -256,7 +299,7 @@ export default function PlanManagementClient({
         </div>
       </div>
 
-      {/* 3. SEÇÃO: O QUE SEU PLANO DÁ DIREITO (DESTAQUE PRINCIPAL) */}
+      {/* 3. SEÇÃO: O QUE SEU PLANO DÁ DIREITO */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -399,13 +442,13 @@ export default function PlanManagementClient({
             Comparativo de Planos & Expansão
           </h2>
           <p className="text-xs text-slate-500">
-            Conheça as opções disponíveis para a sua loja e ajuste sua assinatura conforme a demanda.
+            Tabela oficial de investimentos para a sua loja.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           
-          {/* Opção 1: Mensal Flexível */}
+          {/* Opção 1: Mensal */}
           <div className={`rounded-2xl p-6 border transition-all flex flex-col justify-between ${
             !isAnnual ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-md' : 'bg-white border-slate-200 shadow-sm'
           }`}>
@@ -418,20 +461,25 @@ export default function PlanManagementClient({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mb-4">Flexibilidade total sem período de permanência.</p>
+              <p className="text-xs text-slate-500 mb-4">Flexibilidade sem fidelidade, cancele quando quiser.</p>
               
               <div className="mb-4">
-                <span className="text-2xl font-black text-slate-900">R$ 23,90</span>
+                <span className="text-3xl font-black text-slate-900">R$ 49,90</span>
                 <span className="text-xs text-slate-500"> / mês</span>
-                <p className="text-[11px] text-slate-400 mt-0.5">+ R$ 5,90 / usuário adicional</p>
+                <p className="text-[11px] text-slate-600 font-semibold mt-1">
+                  👤 Acesso para 1 Usuário (Loja / Admin)
+                </p>
               </div>
 
-              <ul className="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+              <ul className="space-y-2 text-xs text-slate-600 pt-3 border-t border-slate-100">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> 1 Usuário liberado
+                </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Auditoria ilimitada de produtos
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Preço de etiqueta e cálculo de quebra
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Preço de etiqueta e cálculo de perda
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Alertas em 1 clique no WhatsApp
@@ -451,7 +499,7 @@ export default function PlanManagementClient({
                     : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
                 }`}
               >
-                {!isAnnual ? 'Personalizar Usuários' : 'Mudar para Mensal'}
+                {!isAnnual ? 'Gerenciar Pagamento' : 'Mudar para Mensal (R$ 49,90)'}
               </button>
             </div>
           </div>
@@ -467,18 +515,29 @@ export default function PlanManagementClient({
             <div>
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-base font-bold text-slate-900">Plano Anual Blindagem</h3>
+                {isAnnual && (
+                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                    Seu Plano
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-slate-500 mb-4">Máxima economia com 1 mês 100% grátis.</p>
+              <p className="text-xs text-slate-500 mb-4">Equipe completa com economia máxima anual.</p>
               
               <div className="mb-4">
-                <span className="text-2xl font-black text-slate-900">R$ 262,90</span>
+                <span className="text-3xl font-black text-slate-900">R$ 498,99</span>
                 <span className="text-xs text-slate-500"> / ano</span>
-                <p className="text-[11px] text-emerald-700 font-semibold mt-0.5">
-                  Equivale a R$ 21,90 / mês (Pague 11, Leve 12)
+                <p className="text-[11px] text-emerald-700 font-bold mt-1">
+                  👥 Até 5 Usuários Inclusos (1 Admin + 4 Operadores)
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Equivale a R$ 41,58 / mês (Mais de 2 meses grátis!)
                 </p>
               </div>
 
-              <ul className="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+              <ul className="space-y-2 text-xs text-slate-600 pt-3 border-t border-slate-100">
+                <li className="flex items-center gap-2 font-semibold text-emerald-800">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Até 5 Usuários inclusos na equipe
+                </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Todos os recursos do plano mensal
                 </li>
@@ -497,13 +556,9 @@ export default function PlanManagementClient({
                   setSelectedCycle('anual');
                   setIsModalOpen(true);
                 }}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  isAnnual 
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md' 
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                }`}
+                className="w-full py-2.5 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"
               >
-                {isAnnual ? 'Ajustar Plano / Usuários' : 'Migrar para o Anual (Economizar)'}
+                {isAnnual ? 'Gerenciar Pagamento Anual' : 'Fazer Upgrade para Anual (Até 5 Usuários)'}
               </button>
             </div>
           </div>
@@ -524,7 +579,7 @@ export default function PlanManagementClient({
                 <p className="text-[11px] text-slate-400 mt-0.5">Tabela escalonada por volume de filiais</p>
               </div>
 
-              <ul className="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+              <ul className="space-y-2 text-xs text-slate-600 pt-3 border-t border-slate-100">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Painel matriz consolidado
                 </li>
@@ -605,16 +660,16 @@ export default function PlanManagementClient({
         </div>
       )}
 
-      {/* 6. MODAL INTERATIVO: PERSONALIZAR PLANO / ADICIONAR USUÁRIOS */}
+      {/* 6. MODAL INTERATIVO: FORMA DE PAGAMENTO & ATIVAÇÃO */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
-            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
               <div>
-                <h3 className="text-base font-bold">Personalizar Capacidade do Plano</h3>
-                <p className="text-xs text-slate-300">Ajuste usuários da equipe ou altere o ciclo de faturamento.</p>
+                <h3 className="text-base font-bold">Configuração de Pagamento da Assinatura</h3>
+                <p className="text-xs text-slate-300">Escolha o plano e o método de pagamento para a sua loja.</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -624,7 +679,7 @@ export default function PlanManagementClient({
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5 overflow-y-auto">
               
               {/* Feedback Alert */}
               {feedbackMsg && (
@@ -637,29 +692,35 @@ export default function PlanManagementClient({
                 </div>
               )}
 
-              {/* Seletor de Ciclo */}
+              {/* Seletor de Plano / Ciclo */}
               <div>
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
-                  Ciclo de Cobrança:
+                  1. Escolha o Plano:
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedCycle('mensal')}
+                    onClick={() => {
+                      setSelectedCycle('mensal');
+                      setCardInstallments('1');
+                    }}
                     className={`p-3 rounded-xl border-2 text-left transition-all ${
                       selectedCycle === 'mensal'
                         ? 'border-emerald-500 bg-emerald-50/40 text-emerald-950 font-bold'
                         : 'border-slate-200 hover:border-slate-300 text-slate-600'
                     }`}
                   >
-                    <span className="block text-xs">Mensal</span>
-                    <span className="text-sm font-black text-slate-900">R$ {BASE_PRICE.toFixed(2).replace('.', ',')}</span>
-                    <span className="text-[10px] text-slate-500 block">Sem fidelidade</span>
+                    <span className="block text-xs">Plano Mensal</span>
+                    <span className="text-base font-black text-slate-900">R$ {PRICE_MENSAL.toFixed(2).replace('.', ',')}</span>
+                    <span className="text-[10px] text-slate-500 block">1 Usuário • Sem fidelidade</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setSelectedCycle('anual')}
+                    onClick={() => {
+                      setSelectedCycle('anual');
+                      setCardInstallments('12');
+                    }}
                     className={`p-3 rounded-xl border-2 text-left transition-all relative ${
                       selectedCycle === 'anual'
                         ? 'border-emerald-500 bg-emerald-50/40 text-emerald-950 font-bold'
@@ -667,66 +728,177 @@ export default function PlanManagementClient({
                     }`}
                   >
                     <span className="absolute -top-2 right-2 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
-                      1 Mês Grátis
+                      Até 5 Usuários
                     </span>
-                    <span className="block text-xs">Anual</span>
-                    <span className="text-sm font-black text-slate-900">R$ {(BASE_PRICE * 11).toFixed(2).replace('.', ',')}</span>
-                    <span className="text-[10px] text-emerald-700 font-semibold block">Pague 11, Leve 12</span>
+                    <span className="block text-xs">Plano Anual Blindagem</span>
+                    <span className="text-base font-black text-slate-900">R$ {PRICE_ANUAL.toFixed(2).replace('.', ',')}</span>
+                    <span className="text-[10px] text-emerald-700 font-semibold block">
+                      R$ 41,58 / mês (2 Meses Grátis)
+                    </span>
                   </button>
                 </div>
               </div>
 
-              {/* Seletor de Usuários Adicionais */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 block">Operadores / Usuários Extras</span>
-                    <span className="text-[11px] text-slate-500">
-                      R$ {EXTRA_USER_PRICE.toFixed(2).replace('.', ',')} / mês por usuário adicional
-                    </span>
-                  </div>
+              {/* Seletor de Método de Pagamento */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
+                  2. Forma de Pagamento:
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('pix')}
+                    className={`p-3 rounded-xl border-2 flex items-center gap-2.5 transition-all ${
+                      paymentMethod === 'pix'
+                        ? 'border-emerald-500 bg-emerald-50/40 text-emerald-950 font-bold'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center shrink-0">
+                      <QrCode className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-xs leading-tight">PIX Instantâneo</span>
+                      <span className="text-[10px] text-emerald-700 font-semibold">Aprovação Imediata</span>
+                    </div>
+                  </button>
 
-                  <div className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => setAdditionalUsers(Math.max(0, additionalUsers - 1))}
-                      className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition-colors"
-                      disabled={additionalUsers <= 0}
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="w-6 text-center font-black text-slate-900 text-sm">
-                      {additionalUsers}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAdditionalUsers(additionalUsers + 1)}
-                      className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-200/60 flex justify-between items-center text-xs text-slate-600">
-                  <span>Capacidade Total Resultante:</span>
-                  <span className="font-bold text-slate-900">
-                    {1 + additionalUsers} usuário{1 + additionalUsers > 1 ? 's' : ''} liberado{1 + additionalUsers > 1 ? 's' : ''}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('credit_card')}
+                    className={`p-3 rounded-xl border-2 flex items-center gap-2.5 transition-all ${
+                      paymentMethod === 'credit_card'
+                        ? 'border-emerald-500 bg-emerald-50/40 text-emerald-950 font-bold'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+                      <CreditCard className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-xs leading-tight">Cartão de Crédito</span>
+                      <span className="text-[10px] text-blue-600 font-semibold">
+                        {selectedCycle === 'anual' ? 'Até 12x sem juros' : 'À vista'}
+                      </span>
+                    </div>
+                  </button>
                 </div>
               </div>
 
-              {/* Resumo do Valor */}
+              {/* Detalhes do Pagamento Conforme Método */}
+              {paymentMethod === 'pix' ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Chave PIX Oficial (E-mail):</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyPix}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 transition-colors"
+                    >
+                      {copiedKey ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedKey ? 'Chave Copiada!' : 'Copiar Chave'}
+                    </button>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 text-center">
+                    <p className="text-sm font-mono font-bold text-slate-900 select-all">
+                      {pixKeyOfficial}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Beneficiário: Luiz Renato Fabricio / Artos Consultoria
+                    </p>
+                  </div>
+
+                  <div className="bg-emerald-50/70 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-900 space-y-1">
+                    <p className="font-bold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      Como pagar via PIX:
+                    </p>
+                    <ol className="list-decimal list-inside text-[11px] text-emerald-800 space-y-0.5 pl-1">
+                      <li>Abra o aplicativo do seu banco ou celular.</li>
+                      <li>Escolha pagar via PIX por chave e cole o e-mail: <strong>{pixKeyOfficial}</strong></li>
+                      <li>Confirme o valor exato de <strong>R$ {selectedPrice.toFixed(2).replace('.', ',')}</strong></li>
+                      <li>Clique no botão verde abaixo para confirmar a ativação imediata.</li>
+                    </ol>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Parcelamento no Cartão:
+                    </label>
+                    <select
+                      value={cardInstallments}
+                      onChange={(e) => setCardInstallments(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    >
+                      {selectedCycle === 'anual' ? (
+                        <>
+                          <option value="1">1x de R$ 498,99 (À vista)</option>
+                          <option value="2">2x de R$ 249,50 sem juros</option>
+                          <option value="3">3x de R$ 166,33 sem juros</option>
+                          <option value="6">6x de R$ 83,16 sem juros</option>
+                          <option value="12">12x de R$ 41,58 sem juros (Recomendado)</option>
+                        </>
+                      ) : (
+                        <option value="1">1x de R$ 49,90 (Mensal recorrente)</option>
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-2">
+                      <input 
+                        type="text" 
+                        placeholder="Número do Cartão de Crédito"
+                        value={cardData.number}
+                        onChange={(e) => setCardData({...cardData, number: e.target.value})}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <input 
+                        type="text" 
+                        placeholder="Nome Impresso no Cartão"
+                        value={cardData.name}
+                        onChange={(e) => setCardData({...cardData, name: e.target.value})}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        placeholder="Validade (MM/AA)"
+                        value={cardData.expiry}
+                        onChange={(e) => setCardData({...cardData, expiry: e.target.value})}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                    <div>
+                      <input 
+                        type="text" 
+                        placeholder="CVV (Código)"
+                        value={cardData.cvv}
+                        onChange={(e) => setCardData({...cardData, cvv: e.target.value})}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Resumo Financeiro */}
               <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-2xl flex justify-between items-center">
                 <div>
-                  <span className="text-xs text-slate-300 block">Novo Investimento Total:</span>
+                  <span className="text-xs text-slate-300 block">Total a ser cobrado:</span>
                   <span className="text-xs text-emerald-400 font-semibold">
-                    Plano {selectedCycle === 'anual' ? 'Anual' : 'Mensal'} • {1 + additionalUsers} Usuário(s)
+                    {selectedCycle === 'anual' ? 'Plano Anual Blindagem (Até 5 Usuários)' : 'Plano Mensal (1 Usuário)'}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="text-2xl font-black text-white">
-                    R$ {finalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    R$ {selectedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-[11px] text-slate-400 block">
                     / {selectedCycle === 'anual' ? 'ano' : 'mês'}
@@ -734,7 +906,7 @@ export default function PlanManagementClient({
                 </div>
               </div>
 
-              {/* Botões do Modal */}
+              {/* Botões de Ação */}
               <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
@@ -745,7 +917,7 @@ export default function PlanManagementClient({
                 </button>
                 <button
                   type="button"
-                  onClick={handleSavePlan}
+                  onClick={handleConfirmPayment}
                   disabled={isSaving}
                   className="w-2/3 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
@@ -754,7 +926,7 @@ export default function PlanManagementClient({
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
-                  {isSaving ? 'Atualizando...' : 'Confirmar e Atualizar Plano'}
+                  {isSaving ? 'Processando...' : 'Confirmar e Ativar Assinatura'}
                 </button>
               </div>
 
