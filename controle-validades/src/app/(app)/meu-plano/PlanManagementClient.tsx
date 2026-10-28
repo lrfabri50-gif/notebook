@@ -529,9 +529,17 @@ export default function PlanManagementClient({
                 <p className="text-[11px] text-emerald-700 font-bold mt-1">
                   👥 Até 5 Usuários Inclusos (1 Admin + 4 Operadores)
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Equivale a R$ 41,58 / mês (Mais de 2 meses grátis!)
-                </p>
+                
+                {/* Destaque Crédito Recorrente sem travar limite */}
+                <div className="mt-2.5 bg-emerald-50 border border-emerald-200/90 rounded-xl p-2.5 text-[11px] text-emerald-900 font-medium space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                    <CreditCard className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Crédito Recorrente Inteligente</span>
+                  </div>
+                  <p className="text-[10px] text-emerald-700">
+                    Debita <strong>R$ 41,58 / mês</strong> na fatura sem usar o limite de R$ 498,99 do seu cartão!
+                  </p>
+                </div>
               </div>
 
               <ul className="space-y-2 text-xs text-slate-600 pt-3 border-t border-slate-100">
@@ -539,10 +547,13 @@ export default function PlanManagementClient({
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Até 5 Usuários inclusos na equipe
                 </li>
                 <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Não bloqueia o limite do seu cartão
+                </li>
+                <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Todos os recursos do plano mensal
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Economia anual garantida
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Economia de 2 meses grátis
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Suporte consultivo prioritário
@@ -825,29 +836,59 @@ export default function PlanManagementClient({
               ) : (
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Parcelamento no Cartão:
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1.5">
+                      Modalidade de Cobrança no Cartão:
                     </label>
-                    <select
-                      value={cardInstallments}
-                      onChange={(e) => setCardInstallments(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                    >
-                      {selectedCycle === 'anual' ? (
-                        <>
-                          <option value="1">1x de R$ 498,99 (À vista)</option>
-                          <option value="2">2x de R$ 249,50 sem juros</option>
-                          <option value="3">3x de R$ 166,33 sem juros</option>
-                          <option value="6">6x de R$ 83,16 sem juros</option>
-                          <option value="12">12x de R$ 41,58 sem juros (Recomendado)</option>
-                        </>
-                      ) : (
-                        <option value="1">1x de R$ 49,90 (Mensal recorrente)</option>
-                      )}
-                    </select>
+
+                    {selectedCycle === 'anual' ? (
+                      <div className="space-y-2 mb-3">
+                        {/* Opção Recorrente - Não compromete limite */}
+                        <div className="p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 flex items-start gap-3 shadow-sm">
+                          <div className="w-4 h-4 rounded-full border-2 border-emerald-600 bg-emerald-600 text-white flex items-center justify-center mt-0.5 shrink-0">
+                            <Check className="w-2.5 h-2.5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black text-slate-900">
+                                Crédito Recorrente Inteligente
+                              </span>
+                              <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                                Recomendado
+                              </span>
+                            </div>
+                            <p className="text-xs font-extrabold text-emerald-800 mt-0.5">
+                              12 parcelas mensais de R$ 41,58 na fatura
+                            </p>
+                            <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                              🔒 <strong>Não compromete seu limite:</strong> O banco só desconta R$ 41,58 a cada mês. Você não precisa ter R$ 498,99 de limite livre no cartão!
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Opção Tradicional À Vista */}
+                        <div className="p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-slate-600 text-xs">
+                          <span>À vista no cartão (consome o limite integral):</span>
+                          <span className="font-bold text-slate-800">1x de R$ 498,99</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 flex items-center gap-3 mb-3">
+                        <div className="w-4 h-4 rounded-full border-2 border-emerald-600 bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                          <Check className="w-2.5 h-2.5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-slate-900 block">
+                            Mensal Recorrente no Cartão
+                          </span>
+                          <span className="text-[11px] text-emerald-700 font-medium">
+                            R$ 49,90 debitados mensalmente sem fidelidade.
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 pt-1">
                     <div className="col-span-2">
                       <input 
                         type="text" 
@@ -891,17 +932,25 @@ export default function PlanManagementClient({
               {/* Resumo Financeiro */}
               <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-2xl flex justify-between items-center">
                 <div>
-                  <span className="text-xs text-slate-300 block">Total a ser cobrado:</span>
+                  <span className="text-xs text-slate-300 block">
+                    {paymentMethod === 'credit_card' && selectedCycle === 'anual'
+                      ? 'Cobrança Recorrente no Cartão:'
+                      : 'Total a ser cobrado:'}
+                  </span>
                   <span className="text-xs text-emerald-400 font-semibold">
-                    {selectedCycle === 'anual' ? 'Plano Anual Blindagem (Até 5 Usuários)' : 'Plano Mensal (1 Usuário)'}
+                    {selectedCycle === 'anual' 
+                      ? 'Plano Anual Blindagem (Até 5 Usuários)' 
+                      : 'Plano Mensal (1 Usuário)'}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="text-2xl font-black text-white">
-                    R$ {selectedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    R$ {paymentMethod === 'credit_card' && selectedCycle === 'anual'
+                      ? '41,58'
+                      : selectedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-[11px] text-slate-400 block">
-                    / {selectedCycle === 'anual' ? 'ano' : 'mês'}
+                    {paymentMethod === 'credit_card' && selectedCycle === 'anual' ? '/ mês na fatura' : selectedCycle === 'anual' ? '/ ano no PIX' : '/ mês'}
                   </span>
                 </div>
               </div>
