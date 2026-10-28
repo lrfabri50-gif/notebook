@@ -177,12 +177,12 @@ export default function AjudaPage() {
               Para assuntos contratuais, envio de notas fiscais ou solicitações formais:
             </p>
             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs sm:text-sm font-mono text-slate-700 break-all mb-4">
-              suporte@artosconsultoria.com.br
+              luizrfabricio@outlook.com
             </div>
           </div>
 
           <a
-            href="mailto:suporte@artosconsultoria.com.br?subject=Suporte%20Controle%20de%20Validades"
+            href="mailto:luizrfabricio@outlook.com?subject=Suporte%20Controle%20de%20Validades"
             className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-colors"
           >
             <Mail className="w-4 h-4" />
