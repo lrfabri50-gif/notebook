@@ -10,10 +10,36 @@ export async function getSubscriptionDetails() {
 
   const store = await prisma.store.findUnique({
     where: { id: session.storeId as string },
-    include: { subscription: true }
+    include: {
+      subscription: {
+        include: {
+          payments: {
+            orderBy: { createdAt: 'desc' },
+            take: 10
+          }
+        }
+      },
+      users: {
+        select: { id: true, name: true, email: true, role: true }
+      },
+      products: {
+        select: { id: true }
+      },
+      collections: {
+        select: { id: true }
+      }
+    }
   });
 
-  return store?.subscription || null;
+  if (!store) return null;
+
+  return {
+    subscription: store.subscription,
+    activeUsersCount: store.users.length,
+    totalProductsCount: store.products.length,
+    totalCollectionsCount: store.collections.length,
+    storeName: store.name
+  };
 }
 
 export async function processCheckout({
