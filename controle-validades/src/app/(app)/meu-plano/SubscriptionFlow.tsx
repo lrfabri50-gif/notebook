@@ -89,7 +89,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
           <div className="bg-emerald-600 text-white rounded-2xl p-6 text-center shadow-lg shadow-emerald-600/20">
             <p className="text-emerald-100 text-sm font-medium mb-1">Total a pagar</p>
             <h3 className="text-4xl font-black mb-2">R$ {finalAmount.toFixed(2).replace('.', ',')}</h3>
-            <p className="text-emerald-200 text-xs">Plano {billingCycle === 'anual' ? 'Anual' : 'Mensal'} • {additionalUsers + 1} Usuário(s)</p>
+            <p className="text-emerald-200 text-xs">Plano {billingCycle === 'anual' ? 'Anual Blindagem (Até 5 Usuários)' : 'Mensal (1 Usuário)'}</p>
           </div>
 
           <div>
@@ -107,15 +107,15 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
               <div className="p-4 rounded-xl border-2 border-slate-200 bg-white opacity-50 cursor-not-allowed flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full border-2 border-slate-300"></div>
-                  <span className="text-slate-500 font-medium">Cartão de Crédito (Em breve)</span>
+                  <span className="text-slate-500 font-medium">Cartão de Crédito</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-blue-800 text-sm">
-            <p className="font-bold mb-1">Ambiente de Teste</p>
-            <p>Esta é uma simulação. Clique no botão abaixo para concluir o pagamento de mentirinha e ativar o plano.</p>
+            <p className="font-bold mb-1">Ambiente Seguro Artos</p>
+            <p>Confirme o pagamento para ativar a assinatura imediatamente.</p>
           </div>
 
           <button 
@@ -124,7 +124,7 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition-colors shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-            Confirmar Pagamento Simulado
+            Confirmar e Ativar Plano
           </button>
         </div>
       </div>
@@ -134,51 +134,16 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
   return (
     <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-12 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 mt-8">
       
-      {/* HEADER SIMULANDO MOBILE */}
+      {/* HEADER */}
       <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-center relative">
         <h2 className="text-xl font-medium text-slate-800">Assinatura do Plano</h2>
       </div>
 
       <form onSubmit={handleGoToPayment} className="p-6 space-y-6">
         
-        {/* SEU PLANO CARD */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-          <h3 className="text-slate-500 text-sm font-medium mb-4">Seu Plano</h3>
-          
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-slate-700">Valor da Loja <span className="text-xs text-slate-400 block">(1 Admin)</span></span>
-            <span className="font-medium text-slate-900">R$ {BASE_PRICE.toFixed(2).replace('.', ',')}</span>
-          </div>
-
-          <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-            <div>
-              <span className="text-slate-700 block">Usuários Adicionais</span>
-              <span className="text-xs text-slate-400">R$ {EXTRA_USER_PRICE.toFixed(2).replace('.', ',')} / usuário</span>
-            </div>
-            
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg p-1">
-              <button 
-                type="button" 
-                onClick={() => setAdditionalUsers(Math.max(0, additionalUsers - 1))}
-                className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm border border-slate-200 text-slate-600 hover:text-slate-900"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="w-4 text-center font-bold text-slate-800">{additionalUsers}</span>
-              <button 
-                type="button" 
-                onClick={() => setAdditionalUsers(additionalUsers + 1)}
-                className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm border border-slate-200 text-slate-600 hover:text-slate-900"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* ESCOLHA O PERIODO */}
         <div>
-          <h3 className="text-slate-800 font-medium mb-3">Escolha o Período de Cobrança:</h3>
+          <h3 className="text-slate-800 font-medium mb-3">Escolha o seu Plano:</h3>
           <div className="space-y-3">
             
             {/* Mensal */}
@@ -194,16 +159,19 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${billingCycle === 'mensal' ? 'border-emerald-500' : 'border-slate-300'}`}>
                   {billingCycle === 'mensal' && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
                 </div>
-                <span className="text-slate-600 font-medium">Assinatura Mensal</span>
+                <div>
+                  <span className="text-slate-800 font-bold block text-sm">Plano Mensal</span>
+                  <span className="text-xs text-slate-500">1 Usuário • Sem fidelidade</span>
+                </div>
               </div>
-              <span className="text-xl font-bold text-slate-900">R$ {monthlyTotal.toFixed(2).replace('.', ',')}</span>
+              <span className="text-xl font-bold text-slate-900">R$ {PRICE_MENSAL.toFixed(2).replace('.', ',')}</span>
             </label>
 
             {/* Anual */}
             <label 
-              className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all relative ${
                 billingCycle === 'anual' 
-                  ? 'border-emerald-500 bg-emerald-50/30' 
+                  ? 'border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20' 
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
               onClick={() => setBillingCycle('anual')}
@@ -213,11 +181,11 @@ export default function SubscriptionFlow({ isActive, currentPlanName, maxUsers, 
                   {billingCycle === 'anual' && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
                 </div>
                 <div>
-                  <span className="text-slate-600 font-medium block">Assinatura Anual</span>
-                  <span className="text-teal-600 text-xs font-bold">1 mês grátis (Pague 11)</span>
+                  <span className="text-slate-800 font-bold block text-sm">Plano Anual Blindagem</span>
+                  <span className="text-emerald-700 text-xs font-bold block">Até 5 Usuários • R$ 41,58/mês</span>
                 </div>
               </div>
-              <span className="text-xl font-bold text-slate-900">R$ {annualTotal.toFixed(2).replace('.', ',')}</span>
+              <span className="text-xl font-bold text-slate-900">R$ {PRICE_ANUAL.toFixed(2).replace('.', ',')}</span>
             </label>
 
           </div>
