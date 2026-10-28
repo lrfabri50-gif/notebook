@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { getSubscriptionDetails } from './actions';
 import { Zap } from 'lucide-react';
 import PlanManagementClient from './PlanManagementClient';
@@ -52,14 +52,16 @@ export default async function MeuPlanoPage() {
       )}
 
       {/* PAINEL EXECUTIVO DO PLANO E DIREITOS INCLUSOS */}
-      <PlanManagementClient 
-        subscription={subscription}
-        activeUsersCount={details?.activeUsersCount || 1}
-        totalProductsCount={details?.totalProductsCount || 0}
-        totalCollectionsCount={details?.totalCollectionsCount || 0}
-        storeName={details?.storeName || 'Loja Matriz'}
-        adminEmail={adminEmail}
-      />
+      <Suspense fallback={<div className="p-8 text-center text-sm text-slate-500">Carregando painel do plano...</div>}>
+        <PlanManagementClient 
+          subscription={subscription}
+          activeUsersCount={details?.activeUsersCount || 1}
+          totalProductsCount={details?.totalProductsCount || 0}
+          totalCollectionsCount={details?.totalCollectionsCount || 0}
+          storeName={details?.storeName || 'Loja Matriz'}
+          adminEmail={adminEmail}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -28,7 +29,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { processCheckout } from './actions';
+import { processCheckout, createInfinitePayCheckout, verifyInfinitePayPayment } from './actions';
 
 export interface PaymentItem {
   id: string;
@@ -76,6 +77,9 @@ export default function PlanManagementClient({
   const maxUsers = subscription?.maxUsers || (isAnnual ? 5 : 1);
   const currentPrice = subscription?.basePlanPrice || (isAnnual ? PRICE_ANUAL : PRICE_MENSAL);
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   // Modal de Troca / Pagamento
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState<'mensal' | 'anual'>(isAnnual ? 'anual' : 'mensal');
@@ -84,20 +88,32 @@ export default function PlanManagementClient({
   const [isSaving, setIsSaving] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [returnBanner, setReturnBanner] = useState<string | null>(null);
 
-  // Dados do Cartão (Simulação)
-  const [cardData, setCardData] = useState({
-    number: '',
-    name: '',
-    expiry: '',
-    cvv: ''
-  });
+  // Verifica retorno automático do Checkout Integrado InfinitePay ($luiz_fabri50)
+  useEffect(() => {
+    const isInfiniteReturn = searchParams.get('infinitepay');
+    const orderNsu = searchParams.get('order_nsu');
+    const transactionNsu = searchParams.get('transaction_nsu') || undefined;
+    const slug = searchParams.get('slug') || undefined;
+    const captureMethod = searchParams.get('capture_method') || undefined;
+
+    if (isInfiniteReturn && orderNsu) {
+      verifyInfinitePayPayment({ orderNsu, transactionNsu, slug, captureMethod }).then((res) => {
+        if (res?.success) {
+          setReturnBanner('Pagamento confirmado pela InfinitePay! Seu plano está 100% ativo.');
+          router.replace('/meu-plano');
+        }
+      });
+    }
+  }, [searchParams, router]);
 
   const selectedPrice = selectedCycle === 'anual' ? PRICE_ANUAL : PRICE_MENSAL;
   const selectedUsers = selectedCycle === 'anual' ? USERS_ANUAL : USERS_MENSAL;
   const monthlyEquivalent = selectedCycle === 'anual' ? (PRICE_ANUAL / 12) : PRICE_MENSAL;
 
   const pixKeyOfficial = 'luizrfabricio@outlook.com';
+  const infiniteTagOfficial = '$luiz_fabri50';
 
   const handleCopyPix = () => {
     navigator.clipboard.writeText(pixKeyOfficial);
@@ -105,17 +121,45 @@ export default function PlanManagementClient({
     setTimeout(() => setCopiedKey(false), 2500);
   };
 
-  const handleConfirmPayment = async () => {
+  const handleInfinitePayRedirect = async () => {
     setIsSaving(true);
     setFeedbackMsg(null);
     try {
-      const methodLabel = paymentMethod === 'pix' 
-        ? 'PIX Instantâneo' 
-        : `Cartão de Crédito (${selectedCycle === 'anual' ? `${cardInstallments}x` : '1x'})`;
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://controle-validades.vercel.app';
+      const res = await createInfinitePayCheckout({
+        billingCycle: selectedCycle,
+        origin
+      });
 
+      if (res.success && res.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+        return;
+      } else {
+        setFeedbackMsg({
+          type: 'error',
+          text: res.message || 'Erro ao iniciar Checkout InfinitePay.'
+        });
+      }
+    } catch (err: any) {
+      setFeedbackMsg({ type: 'error', text: err.message || 'Erro ao conectar com a InfinitePay.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    // Se escolheu Cartão de Crédito, redireciona para o Checkout Seguro da InfinitePay ($luiz_fabri50)
+    if (paymentMethod === 'credit_card') {
+      await handleInfinitePayRedirect();
+      return;
+    }
+
+    setIsSaving(true);
+    setFeedbackMsg(null);
+    try {
       await processCheckout({
         billingCycle: selectedCycle,
-        paymentMethod: methodLabel
+        paymentMethod: 'PIX Instantâneo'
       });
       setFeedbackMsg({ type: 'success', text: `Plano ${selectedCycle === 'anual' ? 'Anual' : 'Mensal'} ativado com sucesso!` });
       setTimeout(() => {
@@ -131,6 +175,22 @@ export default function PlanManagementClient({
 
   return (
     <div className="space-y-8 pb-14">
+      {returnBanner && (
+        <div className="bg-emerald-600 text-white rounded-2xl p-4 shadow-lg flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 text-sm font-bold">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>{returnBanner}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReturnBanner(null)}
+            className="text-white/80 hover:text-white p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* 1. TOPO EXECUTIVO SLIM */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl px-6 py-4 text-white shadow-md relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-emerald-500/10 blur-3xl pointer-events-none" />
@@ -888,43 +948,20 @@ export default function PlanManagementClient({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div className="col-span-2">
-                      <input 
-                        type="text" 
-                        placeholder="Número do Cartão de Crédito"
-                        value={cardData.number}
-                        onChange={(e) => setCardData({...cardData, number: e.target.value})}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
+                   {/* Ambiente Seguro InfinitePay */}
+                  <div className="bg-white border border-emerald-200 rounded-xl p-3.5 space-y-2 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        Checkout Seguro InfinitePay ({infiniteTagOfficial})
+                      </span>
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        Criptografado
+                      </span>
                     </div>
-                    <div className="col-span-2">
-                      <input 
-                        type="text" 
-                        placeholder="Nome Impresso no Cartão"
-                        value={cardData.name}
-                        onChange={(e) => setCardData({...cardData, name: e.target.value})}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                    </div>
-                    <div>
-                      <input 
-                        type="text" 
-                        placeholder="Validade (MM/AA)"
-                        value={cardData.expiry}
-                        onChange={(e) => setCardData({...cardData, expiry: e.target.value})}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                    </div>
-                    <div>
-                      <input 
-                        type="text" 
-                        placeholder="CVV (Código)"
-                        value={cardData.cvv}
-                        onChange={(e) => setCardData({...cardData, cvv: e.target.value})}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Ao clicar no botão abaixo, você será redirecionado para a página oficial da <strong>InfinitePay</strong> para finalizar o pagamento no Cartão de Crédito (em até 12x) ou PIX com liberação automática.
+                    </p>
                   </div>
                 </div>
               )}
@@ -972,10 +1009,16 @@ export default function PlanManagementClient({
                 >
                   {isSaving ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : paymentMethod === 'credit_card' ? (
+                    <ExternalLink className="w-4 h-4" />
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
-                  {isSaving ? 'Processando...' : 'Confirmar e Ativar Assinatura'}
+                  {isSaving
+                    ? 'Processando...'
+                    : paymentMethod === 'credit_card'
+                    ? 'Pagar com Cartão na InfinitePay'
+                    : 'Confirmar e Ativar Assinatura'}
                 </button>
               </div>
 
