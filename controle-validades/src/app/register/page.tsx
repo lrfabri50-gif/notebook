@@ -2,17 +2,30 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Store, Lock, Mail, CheckCircle2 } from 'lucide-react';
+import { Store, Lock, Mail, Phone, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [storeName, setStoreName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneWhatsapp, setPhoneWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  const handlePhoneChange = (val: string) => {
+    // Máscara amigável (XX) XXXXX-XXXX
+    const raw = val.replace(/\D/g, '').slice(0, 11);
+    if (raw.length <= 2) {
+      setPhoneWhatsapp(raw.length > 0 ? `(${raw}` : '');
+    } else if (raw.length <= 7) {
+      setPhoneWhatsapp(`(${raw.slice(0, 2)}) ${raw.slice(2)}`);
+    } else {
+      setPhoneWhatsapp(`(${raw.slice(0, 2)}) ${raw.slice(2, 7)}-${raw.slice(7)}`);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +36,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeName, email, password })
+        body: JSON.stringify({ storeName, email, password, phoneWhatsapp })
       });
 
       const data = await response.json();
@@ -106,6 +119,25 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 w-full border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   placeholder="admin@suaempresa.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                WhatsApp com DDD <span className="text-xs text-emerald-600 font-normal">(para alertas)</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="tel"
+                  required
+                  value={phoneWhatsapp}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  className="pl-10 w-full border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="(11) 99999-9999"
                 />
               </div>
             </div>

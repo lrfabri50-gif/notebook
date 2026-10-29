@@ -4,10 +4,10 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { storeName, email, password } = await request.json();
+    const { storeName, email, password, phoneWhatsapp } = await request.json();
 
     if (!storeName || !email || !password) {
-      return NextResponse.json({ error: 'Preencha todos os campos' }, { status: 400 });
+      return NextResponse.json({ error: 'Preencha todos os campos obrigatórios' }, { status: 400 });
     }
 
     // Verifica se usuário já existe
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
                 id: newUserId,
                 email,
                 passwordHash,
+                phoneWhatsapp: phoneWhatsapp ? phoneWhatsapp.replace(/\D/g, '') : null,
                 role: 'admin',
                 name: 'Administrador'
               }
