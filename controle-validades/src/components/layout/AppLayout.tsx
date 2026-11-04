@@ -16,7 +16,8 @@ import {
   X,
   LogOut,
   Smartphone,
-  RefreshCw
+  RefreshCw,
+  ShieldAlert
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -42,15 +43,21 @@ const mobileItems = [
 export function AppLayout({ 
   children, 
   storeName = 'Loja Principal',
-  userRole = 'operator'
+  userRole = 'operator',
+  isMaster = false
 }: { 
   children: React.ReactNode;
   storeName?: string;
   userRole?: string;
+  isMaster?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const visibleMenuItems = isMaster
+    ? [...menuItems, { href: '/master', label: 'Painel Master', icon: ShieldAlert, roles: ['admin', 'manager', 'operator'] }]
+    : menuItems;
 
   const handleLogout = async () => {
     try {
@@ -76,7 +83,8 @@ export function AppLayout({
              pathname.startsWith('/departamentos') ? 'Departamentos' :
              pathname.startsWith('/coletar') ? 'Coleta de Produtos' :
              pathname.startsWith('/relatorios') ? 'Relatórios' :
-             pathname.startsWith('/meu-plano') ? 'Meu Plano' : 'Validades'}
+             pathname.startsWith('/meu-plano') ? 'Meu Plano' :
+             pathname.startsWith('/master') ? 'Painel Master Artos' : 'Validades'}
           </h2>
           <p className="text-white/70 text-[10px] truncate">
             {pathname === '/dashboard' ? 'Visão geral do controle de validades' : 
@@ -84,13 +92,14 @@ export function AppLayout({
              pathname.startsWith('/departamentos') ? 'Gestão de setores' :
              pathname.startsWith('/coletar') ? 'Registro de vencimentos' :
              pathname.startsWith('/relatorios') ? 'Análise de dados' :
-             pathname.startsWith('/meu-plano') ? 'Assinatura e cobrança' : ''}
+             pathname.startsWith('/meu-plano') ? 'Assinatura e cobrança' :
+             pathname.startsWith('/master') ? 'Administração exclusiva de todas as lojas' : ''}
           </p>
         </div>
 
         {/* Top Navigation Links - Flexible Space */}
         <nav className="flex-1 flex justify-center items-center h-full gap-2 overflow-x-auto hide-scrollbar px-2">
-          {menuItems.filter(item => item.roles.includes(userRole)).map((item) => {
+          {visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
             const Icon = item.icon;
             
             if (item.href === '#refresh') {
@@ -160,7 +169,7 @@ export function AppLayout({
                 <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full uppercase font-bold">{userRole}</span>
               </div>
               
-              {menuItems.filter(item => item.roles.includes(userRole)).map((item) => {
+              {visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
                 const Icon = item.icon;
                 
                 if (item.href === '#refresh') {

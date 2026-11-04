@@ -31,3 +31,14 @@ export async function getSession() {
   
   return await verifyToken(token);
 }
+
+const MASTER_ADMIN_EMAILS = [
+  'admin@admin.com',
+  'lrfabri50@gmail.com',
+  'luizrfabricio@outlook.com'
+];
+
+export function isMasterAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  return MASTER_ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}

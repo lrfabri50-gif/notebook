@@ -1,5 +1,5 @@
 import { AppLayout } from '@/components/layout/AppLayout';
-import { getSession } from '@/lib/auth';
+import { getSession, isMasterAdminEmail } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import TrialBanner from '@/components/layout/TrialBanner';
 import { prisma } from '@/lib/prisma';
@@ -9,6 +9,15 @@ export default async function AppGroup({ children }: { children: React.ReactNode
 
   if (!session) {
     redirect('/login');
+  }
+
+  let isMaster = false;
+  if (session.userId) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.userId as string },
+      select: { email: true }
+    });
+    isMaster = isMasterAdminEmail(currentUser?.email);
   }
 
   // Busca o nome real da loja e status da assinatura no banco
@@ -42,7 +51,7 @@ export default async function AppGroup({ children }: { children: React.ReactNode
   }
 
   return (
-    <AppLayout storeName={storeName} userRole={session.role as string}>
+    <AppLayout storeName={storeName} userRole={session.role as string} isMaster={isMaster}>
       {daysRemaining !== null && daysRemaining <= 7 && (
         <TrialBanner daysRemaining={daysRemaining} />
       )}
