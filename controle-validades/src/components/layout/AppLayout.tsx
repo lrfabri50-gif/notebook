@@ -73,32 +73,10 @@ export function AppLayout({
     <div className="flex flex-col h-[100dvh] w-full bg-background overflow-hidden relative">
 
       {/* Desktop Header / Top Navigation */}
-      <header className="hidden md:flex h-16 bg-primary items-center justify-between px-6 shadow-md z-10 w-full shrink-0 gap-4">
-
-        {/* Page Title (Dynamic) replacing the Logo */}
-        <div className="flex flex-col justify-center shrink-0 min-w-[200px]">
-          <h2 className="text-white font-bold text-lg leading-tight truncate">
-            {pathname === '/dashboard' ? 'Painel' :
-              pathname.startsWith('/produtos') ? 'Cadastro de Produtos' :
-                pathname.startsWith('/departamentos') ? 'Departamentos' :
-                  pathname.startsWith('/coletar') ? 'Coleta de Produtos' :
-                    pathname.startsWith('/relatorios') ? 'Relatórios' :
-            pathname.startsWith('/meu-plano') ? 'Meu Plano' :
-             pathname.startsWith('/master') ? 'Painel Master Artos' : 'Validades'}
-          </h2>
-          <p className="text-white/70 text-[10px] truncate">
-            {pathname === '/dashboard' ? 'Visão geral do controle de validades' :
-              pathname.startsWith('/produtos') ? 'Gerenciamento do catálogo' :
-                pathname.startsWith('/departamentos') ? 'Gestão de setores' :
-                  pathname.startsWith('/coletar') ? 'Registro de vencimentos' :
-                    pathname.startsWith('/relatorios') ? 'Análise de dados' :
-            pathname.startsWith('/meu-plano') ? 'Assinatura e cobrança' :
-             pathname.startsWith('/master') ? 'Administração exclusiva de todas as lojas' : ''}
-          </p>
-        </div>
+      <header className="hidden md:flex h-16 bg-primary items-center justify-between px-4 lg:px-6 shadow-md z-10 w-full shrink-0 gap-3">
 
         {/* Top Navigation Links - Flexible Space */}
-        <nav className="flex-1 flex justify-center items-center h-full gap-2 overflow-x-auto hide-scrollbar px-2">
+        <nav className="flex-1 flex items-center h-full gap-1.5 overflow-x-auto hide-scrollbar">
             {
               visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
                 const Icon = item.icon;
@@ -108,7 +86,7 @@ export function AppLayout({
                     <button
                       key={item.href}
                       onClick={() => window.location.reload()}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-white/80 hover:bg-white/10 hover:text-white"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-white/80 hover:bg-white/10 hover:text-white"
                     >
                       <Icon className="w-4 h-4 shrink-0" />
                       {item.label}
@@ -122,7 +100,7 @@ export function AppLayout({
                     key={item.href}
                     href={item.href}
                     className={clsx(
-                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
+                      'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
                       isActive
                         ? 'bg-white/20 text-white'
                         : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -137,8 +115,8 @@ export function AppLayout({
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center justify-end gap-4 shrink-0 min-w-[200px]">
-          <select className="bg-white/10 text-white border border-white/20 rounded px-3 py-1.5 text-sm focus:outline-none max-w-[200px] truncate">
+        <div className="flex items-center justify-end gap-3 shrink-0">
+          <select className="bg-white/10 text-white border border-white/20 rounded px-3 py-1.5 text-sm focus:outline-none max-w-[180px] truncate">
             <option className="text-black">{storeName}</option>
           </select>
           <button onClick={handleLogout} className="flex items-center gap-2 text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded text-sm transition-colors font-medium shrink-0">
