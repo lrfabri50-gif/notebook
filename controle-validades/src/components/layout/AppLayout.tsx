@@ -76,7 +76,7 @@ export function AppLayout({
       <header className="hidden md:flex h-16 bg-primary items-center justify-between px-4 lg:px-6 shadow-md z-10 w-full shrink-0 gap-3">
 
         {/* Top Navigation Links - Flexible Space */}
-        <nav className="flex-1 flex items-center h-full gap-1.5 overflow-x-auto hide-scrollbar">
+        <nav className="flex-1 flex justify-center items-center h-full gap-1.5 overflow-x-auto hide-scrollbar">
             {
               visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
                 const Icon = item.icon;
