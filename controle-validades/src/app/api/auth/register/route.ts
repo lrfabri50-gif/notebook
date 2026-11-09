@@ -4,11 +4,15 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { storeName, email, password, phoneWhatsapp } = await request.json();
+    const { storeName, cnpj, email, password, phoneWhatsapp } = await request.json();
 
     if (!storeName || !email || !password) {
       return NextResponse.json({ error: 'Preencha todos os campos obrigatórios' }, { status: 400 });
     }
+
+    const formattedStoreName = cnpj && cnpj.trim()
+      ? `${storeName.trim()} (CNPJ: ${cnpj.trim()})`
+      : storeName.trim();
 
     // Verifica se usuário já existe
     const existingUser = await prisma.user.findUnique({
@@ -37,7 +41,7 @@ export async function POST(request: Request) {
         trialEndDate,
         stores: {
           create: {
-            name: storeName,
+            name: formattedStoreName,
             users: {
               create: {
                 id: newUserId,
