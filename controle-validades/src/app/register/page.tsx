@@ -2,18 +2,28 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Store, Lock, Mail, Phone, CheckCircle2 } from 'lucide-react';
+import { Store, Lock, Mail, Phone, FileText, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [storeName, setStoreName] = useState('');
+  const [cnpj, setCnpj] = useState('');
   const [email, setEmail] = useState('');
   const [phoneWhatsapp, setPhoneWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  const handleCnpjChange = (val: string) => {
+    const raw = val.replace(/\D/g, '').slice(0, 14);
+    if (raw.length <= 2) setCnpj(raw);
+    else if (raw.length <= 5) setCnpj(`${raw.slice(0, 2)}.${raw.slice(2)}`);
+    else if (raw.length <= 8) setCnpj(`${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5)}`);
+    else if (raw.length <= 12) setCnpj(`${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8)}`);
+    else setCnpj(`${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8, 12)}-${raw.slice(12)}`);
+  };
 
   const handlePhoneChange = (val: string) => {
     // Máscara amigável (XX) XXXXX-XXXX
@@ -36,7 +46,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeName, email, password, phoneWhatsapp })
+        body: JSON.stringify({ storeName, cnpj, email, password, phoneWhatsapp })
       });
 
       const data = await response.json();
@@ -90,7 +100,7 @@ export default function RegisterPage() {
             )}
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nome da Loja</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Nome da Loja / Empresa</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Store className="h-5 w-5 text-slate-400" />
@@ -101,7 +111,23 @@ export default function RegisterPage() {
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   className="pl-10 w-full border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  placeholder="Nome fantasia"
+                  placeholder="Nome fantasia ou Razão Social"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">CNPJ da Loja</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FileText className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  value={cnpj}
+                  onChange={(e) => handleCnpjChange(e.target.value)}
+                  className="pl-10 w-full border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="00.000.000/0000-00"
                 />
               </div>
             </div>

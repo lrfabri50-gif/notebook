@@ -17,12 +17,15 @@ import {
   Sparkles,
   TrendingUp,
   Mail,
-  Calendar
+  Calendar,
+  Plus,
+  X
 } from 'lucide-react';
 import {
   masterUpdateStorePlan,
   masterResetUserPassword,
-  masterDeleteStore
+  masterDeleteStore,
+  masterCreateStore
 } from './actions';
 
 export interface StoreMasterItem {
@@ -67,6 +70,53 @@ export default function MasterPanelClient({
   const [filterStatus, setFilterStatus] = useState<'all' | 'trial' | 'active' | 'suspended'>('all');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Modal de Cadastro de Nova Loja / Piloto
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [newStore, setNewStore] = useState({
+    storeName: '',
+    cnpj: '',
+    email: '',
+    password: '',
+    phoneWhatsapp: '',
+    planMode: 'piloto_fixo' as 'piloto_fixo' | 'anual' | 'mensal' | 'trial'
+  });
+
+  const handleCnpjMask = (val: string) => {
+    const raw = val.replace(/\D/g, '').slice(0, 14);
+    let formatted = raw;
+    if (raw.length > 12) formatted = `${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8, 12)}-${raw.slice(12)}`;
+    else if (raw.length > 8) formatted = `${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8)}`;
+    else if (raw.length > 5) formatted = `${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5)}`;
+    else if (raw.length > 2) formatted = `${raw.slice(0, 2)}.${raw.slice(2)}`;
+    setNewStore({ ...newStore, cnpj: formatted });
+  };
+
+  const handleCreateStore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingId('create-store');
+    setFeedback(null);
+    try {
+      await masterCreateStore(newStore);
+      setFeedback({
+        type: 'success',
+        text: `Loja "${newStore.storeName}" cadastrada com sucesso! Basta passar o e-mail (${newStore.email}) e a senha escolhida para o cliente entrar.`
+      });
+      setIsNewModalOpen(false);
+      setNewStore({
+        storeName: '',
+        cnpj: '',
+        email: '',
+        password: '',
+        phoneWhatsapp: '',
+        planMode: 'piloto_fixo'
+      });
+    } catch (err: any) {
+      setFeedback({ type: 'error', text: err.message || 'Erro ao cadastrar loja.' });
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   // Cálculos Executivos
   const totalStores = stores.length;
@@ -197,11 +247,15 @@ export default function MasterPanelClient({
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl px-4 py-2.5 text-right shrink-0">
-            <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold block">
-              Administrador Master
-            </span>
-            <span className="text-xs font-mono text-white font-semibold">{masterEmail}</span>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsNewModalOpen(true)}
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm px-4 py-3 rounded-xl shadow-lg transition-all flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              Cadastrar Loja Piloto / Cliente
+            </button>
           </div>
         </div>
       </div>
@@ -463,6 +517,145 @@ export default function MasterPanelClient({
           );
         })}
       </div>
+
+      {/* MODAL PARA CADASTRAR NOVA LOJA PILOTO / CLIENTE */}
+      {isNewModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold">Cadastrar Loja Piloto / Novo Cliente</h3>
+                <p className="text-xs text-slate-300">
+                  Crie o acesso exclusivo da loja com CNPJ e defina se o plano ficará fixo liberado.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStore} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nome da Empresa / Supermercado *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newStore.storeName}
+                  onChange={(e) => setNewStore({ ...newStore, storeName: e.target.value })}
+                  placeholder="Ex: Supermercado Alvorada"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    CNPJ da Loja
+                  </label>
+                  <input
+                    type="text"
+                    value={newStore.cnpj}
+                    onChange={(e) => handleCnpjMask(e.target.value)}
+                    placeholder="00.000.000/0000-00"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    WhatsApp com DDD
+                  </label>
+                  <input
+                    type="tel"
+                    value={newStore.phoneWhatsapp}
+                    onChange={(e) => setNewStore({ ...newStore, phoneWhatsapp: e.target.value })}
+                    placeholder="(14) 99999-9999"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    E-mail de Login da Loja *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={newStore.email}
+                    onChange={(e) => setNewStore({ ...newStore, email: e.target.value })}
+                    placeholder="gerente@loja.com.br"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Senha de Acesso *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    minLength={6}
+                    value={newStore.password}
+                    onChange={(e) => setNewStore({ ...newStore, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Modalidade de Acesso da Loja:
+                </label>
+                <select
+                  value={newStore.planMode}
+                  onChange={(e) => setNewStore({ ...newStore, planMode: e.target.value as any })}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                >
+                  <option value="piloto_fixo">
+                    ⭐ Loja Piloto Oficial — Acesso Fixo Liberado (Até 5 Usuários / Sem expirar)
+                  </option>
+                  <option value="anual">
+                    Plano Anual Blindagem — Ativo (Até 5 Usuários)
+                  </option>
+                  <option value="mensal">
+                    Plano Mensal — Ativo (1 Usuário)
+                  </option>
+                  <option value="trial">
+                    Período de Teste Grátis (Expira em 7 Dias)
+                  </option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewModalOpen(false)}
+                  className="w-1/3 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loadingId === 'create-store'}
+                  className="w-2/3 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md disabled:opacity-50"
+                >
+                  {loadingId === 'create-store' ? 'Cadastrando Loja...' : 'Criar Loja e Liberar Acesso'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

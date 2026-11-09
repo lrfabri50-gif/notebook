@@ -229,3 +229,86 @@ export async function masterDeleteStore({ storeId }: { storeId: string }) {
   return { success: true };
 }
 
+export async function masterCreateStore({
+  storeName,
+  cnpj,
+  email,
+  password,
+  phoneWhatsapp,
+  planMode
+}: {
+  storeName: string;
+  cnpj?: string;
+  email: string;
+  password: string;
+  phoneWhatsapp?: string;
+  planMode: 'piloto_fixo' | 'anual' | 'mensal' | 'trial';
+}) {
+  await assertMasterAdmin();
+
+  if (!storeName.trim() || !email.trim() || !password || password.length < 6) {
+    throw new Error('Preencha Nome da Loja, E-mail e Senha (mínimo 6 caracteres).');
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() }
+  });
+
+  if (existing) {
+    throw new Error('Já existe um usuário cadastrado com este e-mail.');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const formattedStoreName =
+    cnpj && cnpj.trim() ? `${storeName.trim()} (CNPJ: ${cnpj.trim()})` : storeName.trim();
+
+  const newUserId = crypto.randomUUID();
+  const isTrial = planMode === 'trial';
+  const trialEndDate = new Date();
+  trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+  const planName =
+    planMode === 'piloto_fixo'
+      ? 'Loja Piloto Oficial (Fixo Liberado)'
+      : planMode === 'anual'
+      ? 'Plano Anual Blindagem'
+      : planMode === 'mensal'
+      ? 'Plano Mensal'
+      : 'Período de Teste (7 Dias)';
+
+  const maxUsers = planMode === 'piloto_fixo' || planMode === 'anual' ? 5 : 1;
+  const basePlanPrice =
+    planMode === 'anual' ? 498.99 : planMode === 'mensal' ? 49.90 : 0;
+
+  await prisma.subscription.create({
+    data: {
+      userId: newUserId,
+      status: isTrial ? 'trial' : 'active',
+      planName,
+      maxUsers,
+      basePlanPrice,
+      whatsappAddon: true,
+      whatsappAddonPrice: 0,
+      trialEndDate: isTrial ? trialEndDate : null,
+      stores: {
+        create: {
+          name: formattedStoreName,
+          users: {
+            create: {
+              id: newUserId,
+              email: email.trim().toLowerCase(),
+              passwordHash,
+              phoneWhatsapp: phoneWhatsapp ? phoneWhatsapp.replace(/\D/g, '') : null,
+              role: 'admin',
+              name: 'Administrador'
+            }
+          }
+        }
+      }
+    }
+  });
+
+  revalidatePath('/master');
+  return { success: true };
+}
+
