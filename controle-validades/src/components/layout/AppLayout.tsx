@@ -3,14 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  Home, 
-  Box, 
-  Layers, 
-  Users, 
-  BarChart2, 
-  ScanLine, 
-  CreditCard, 
+import {
+  Home,
+  Box,
+  Layers,
+  Users,
+  BarChart2,
+  ScanLine,
+  CreditCard,
   HelpCircle,
   Menu,
   X,
@@ -37,15 +37,15 @@ const mobileItems = [
   { href: '/dashboard', label: 'Início', icon: Home, roles: ['admin', 'manager', 'operator'] },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2, roles: ['admin', 'manager', 'operator'] },
   { href: '/coletar', label: 'Coletar', icon: ScanLine, roles: ['admin', 'manager', 'operator'] },
-  { href: '#menu', label: 'Menu', icon: Menu, roles: ['admin', 'manager', 'operator'] }, 
+  { href: '#menu', label: 'Menu', icon: Menu, roles: ['admin', 'manager', 'operator'] },
 ];
 
-export function AppLayout({ 
-  children, 
+export function AppLayout({
+  children,
   storeName = 'Loja Principal',
   userRole = 'operator',
   isMaster = false
-}: { 
+}: {
   children: React.ReactNode;
   storeName?: string;
   userRole?: string;
@@ -71,67 +71,69 @@ export function AppLayout({
 
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-background overflow-hidden relative">
-      
+
       {/* Desktop Header / Top Navigation */}
       <header className="hidden md:flex h-16 bg-primary items-center justify-between px-6 shadow-md z-10 w-full shrink-0 gap-4">
-        
+
         {/* Page Title (Dynamic) replacing the Logo */}
         <div className="flex flex-col justify-center shrink-0 min-w-[200px]">
           <h2 className="text-white font-bold text-lg leading-tight truncate">
-            {pathname === '/dashboard' ? 'Painel' : 
-             pathname.startsWith('/produtos') ? 'Cadastro de Produtos' :
-             pathname.startsWith('/departamentos') ? 'Departamentos' :
-             pathname.startsWith('/coletar') ? 'Coleta de Produtos' :
-             pathname.startsWith('/relatorios') ? 'Relatórios' :
-             pathname.startsWith('/meu-plano') ? 'Meu Plano' :
+            {pathname === '/dashboard' ? 'Painel' :
+              pathname.startsWith('/produtos') ? 'Cadastro de Produtos' :
+                pathname.startsWith('/departamentos') ? 'Departamentos' :
+                  pathname.startsWith('/coletar') ? 'Coleta de Produtos' :
+                    pathname.startsWith('/relatorios') ? 'Relatórios' :
+            pathname.startsWith('/meu-plano') ? 'Meu Plano' :
              pathname.startsWith('/master') ? 'Painel Master Artos' : 'Validades'}
           </h2>
           <p className="text-white/70 text-[10px] truncate">
-            {pathname === '/dashboard' ? 'Visão geral do controle de validades' : 
-             pathname.startsWith('/produtos') ? 'Gerenciamento do catálogo' :
-             pathname.startsWith('/departamentos') ? 'Gestão de setores' :
-             pathname.startsWith('/coletar') ? 'Registro de vencimentos' :
-             pathname.startsWith('/relatorios') ? 'Análise de dados' :
-             pathname.startsWith('/meu-plano') ? 'Assinatura e cobrança' :
+            {pathname === '/dashboard' ? 'Visão geral do controle de validades' :
+              pathname.startsWith('/produtos') ? 'Gerenciamento do catálogo' :
+                pathname.startsWith('/departamentos') ? 'Gestão de setores' :
+                  pathname.startsWith('/coletar') ? 'Registro de vencimentos' :
+                    pathname.startsWith('/relatorios') ? 'Análise de dados' :
+            pathname.startsWith('/meu-plano') ? 'Assinatura e cobrança' :
              pathname.startsWith('/master') ? 'Administração exclusiva de todas as lojas' : ''}
           </p>
         </div>
 
         {/* Top Navigation Links - Flexible Space */}
         <nav className="flex-1 flex justify-center items-center h-full gap-2 overflow-x-auto hide-scrollbar px-2">
-          {visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
-            const Icon = item.icon;
-            
-            if (item.href === '#refresh') {
-              return (
-                <button
-                  key={item.href}
-                  onClick={() => window.location.reload()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-white/80 hover:bg-white/10 hover:text-white"
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {item.label}
-                </button>
-              );
-            }
+            {
+              visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
+                const Icon = item.icon;
 
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={clsx(
-                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
-                  isActive 
-                    ? 'bg-white/20 text-white' 
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
-                )}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                {item.label}
-              </Link>
-            );
-          })}
+                if (item.href === '#refresh') {
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => window.location.reload()}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-white/80 hover:bg-white/10 hover:text-white"
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {item.label}
+                    </button>
+                  );
+                }
+
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={clsx(
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    )}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {item.label}
+                  </Link>
+                );
+              })
+            }
         </nav>
 
         {/* Right Actions */}
@@ -153,7 +155,7 @@ export function AppLayout({
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
-          <div 
+          <div
             className="absolute bottom-16 left-0 right-0 bg-white rounded-t-2xl shadow-xl overflow-hidden flex flex-col max-h-[80dvh] animate-in slide-in-from-bottom-10"
             onClick={e => e.stopPropagation()}
           >
@@ -168,51 +170,53 @@ export function AppLayout({
                 <span className="text-sm font-medium text-slate-700">{storeName}</span>
                 <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full uppercase font-bold">{userRole}</span>
               </div>
-              
-              {visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
-                const Icon = item.icon;
-                
-                if (item.href === '#refresh') {
-                  return (
-                    <button
-                      key={item.href}
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        window.location.reload();
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors bg-white border border-slate-100 text-slate-700 hover:bg-slate-50 w-full text-left"
-                    >
-                      <Icon className="w-5 h-5 text-primary" />
-                      {item.label}
-                    </button>
-                  );
+
+                {
+                  visibleMenuItems.filter(item => item.roles.includes(userRole)).map((item) => {
+                    const Icon = item.icon;
+
+                    if (item.href === '#refresh') {
+                      return (
+                        <button
+                          key={item.href}
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            window.location.reload();
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors bg-white border border-slate-100 text-slate-700 hover:bg-slate-50 w-full text-left"
+                        >
+                          <Icon className="w-5 h-5 text-primary" />
+                          {item.label}
+                        </button>
+                      );
+                    }
+
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={clsx(
+                          'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
+                          isActive
+                            ? 'bg-primary text-white'
+                            : 'bg-white border border-slate-100 text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        <Icon className={clsx("w-5 h-5", isActive ? "text-white" : "text-primary")} />
+                        {item.label}
+                      </Link>
+                    );
+                  })
                 }
 
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={clsx(
-                      'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
-                      isActive 
-                        ? 'bg-primary text-white' 
-                        : 'bg-white border border-slate-100 text-slate-700 hover:bg-slate-50'
-                    )}
-                  >
-                    <Icon className={clsx("w-5 h-5", isActive ? "text-white" : "text-primary")} />
-                    {item.label}
-                  </Link>
-                );
-              })}
-              
-              <button 
-                onClick={handleLogout} 
-                className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold border border-red-100"
-              >
-                <LogOut className="w-5 h-5" /> Sair do Sistema
-              </button>
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold border border-red-100"
+                >
+                  <LogOut className="w-5 h-5" /> Sair do Sistema
+                </button>
             </div>
           </div>
         </div>
@@ -227,7 +231,7 @@ export function AppLayout({
           const isActive = !isMenu && !isRefresh && pathname === item.href;
           return (
             <button
-              key={item.label} 
+              key={item.label}
               onClick={(e) => {
                 if (isMenu) {
                   e.preventDefault();

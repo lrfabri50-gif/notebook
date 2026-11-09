@@ -466,3 +466,4 @@ export default function MasterPanelClient({
     </div>
   );
 }
+

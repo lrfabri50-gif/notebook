@@ -228,3 +228,4 @@ export async function masterDeleteStore({ storeId }: { storeId: string }) {
   revalidatePath('/master');
   return { success: true };
 }
+

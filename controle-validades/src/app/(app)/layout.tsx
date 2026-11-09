@@ -51,11 +51,11 @@ export default async function AppGroup({ children }: { children: React.ReactNode
   }
 
   return (
-    <AppLayout storeName={storeName} userRole={session.role as string} isMaster={isMaster}>
-      {daysRemaining !== null && daysRemaining <= 7 && (
-        <TrialBanner daysRemaining={daysRemaining} />
-      )}
-      {children}
-    </AppLayout>
-  );
+      <AppLayout storeName={storeName} userRole={session.role as string} isMaster={isMaster}>
+        {daysRemaining !== null && daysRemaining <= 7 && (
+          <TrialBanner daysRemaining={daysRemaining} />
+        )}
+        {children}
+      </AppLayout>
+      );
 }
